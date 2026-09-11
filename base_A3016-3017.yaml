@@ -86,6 +86,27 @@ datasets:
       amp2: 0.0 #0.0192 # Amplitude of the second gaussian
     prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
 
+###info for the noise covariance calculations (edit later):###
+datasets:
+  act_f090:
+    instrument: act
+    frequency: 90
+    array: pa5
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+  act_f150:
+    instrument: act
+    frequency: 150
+    array: pa6
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+  planck_f100:
+    instrument: planck
+    frequency: 100
+    array: null
+    scan: npipe
+    data_dir: ${PLANCK_DATADIR}
+
 # Setting for the fitter
 fitting:
   maxiter: 10 # Maximum fit iterations per round
