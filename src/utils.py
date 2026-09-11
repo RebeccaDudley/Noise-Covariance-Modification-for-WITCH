@@ -302,38 +302,41 @@ def get_all_centers(region_center_ra, region_center_dec, fit_radius):
             center_3, center_4, center_5, 
             center_6, center_7, cluster_center]
 
-###formatting for cluster and background region info for the get_all_regions function below:###
-#cluster = [36.342, -42.008, 0.20]
+#######new modification to get_all_regions:#######
 
-#background_regions = [
-#    [36.30, -41.80, 0.20],
-#    [36.55, -41.95, 0.30],
-#    [36.60, -42.20, 0.15],
-#    [36.25, -42.35, 0.25],
-#]
+def make_region(region):
+    """
+    Convert a region definition from the config file into
+    [[dec_min, ra_min], [dec_max, ra_max]] in radians.
 
-def make_region(center_ra, center_dec, width):
+    Expected format:
+    {
+        "ra": 36.342,
+        "dec": -42.008,
+        "width": 0.20
+    }
+    """
 
-    center_ra = np.deg2rad(center_ra)
-    center_dec = np.deg2rad(center_dec)
-    width = np.deg2rad(width)
+    center_ra = np.deg2rad(region["ra"])
+    center_dec = np.deg2rad(region["dec"])
+    width = np.deg2rad(region["width"])
 
     return [
-        [center_dec - width/2, center_ra - width/2],
-        [center_dec + width/2, center_ra + width/2]
+        [center_dec - width / 2, center_ra - width / 2],
+        [center_dec + width / 2, center_ra + width / 2],
     ]
 
 
-def get_all_regions(cluster_definition, background_definitions):
+def get_all_regions(region_config):
 
-    cluster_reg = make_region(*cluster_definition)
+    cluster_reg = make_region(region_config["cluster"])
 
-    regions = [
-        make_region(*region)
-        for region in background_definitions
+    background_regions = [
+        make_region(region)
+        for region in region_config.get("background", [])
     ]
 
-    return regions + [cluster_reg]
+    return background_regions + [cluster_reg]
 
 
 
