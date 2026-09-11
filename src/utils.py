@@ -302,55 +302,40 @@ def get_all_centers(region_center_ra, region_center_dec, fit_radius):
             center_3, center_4, center_5, 
             center_6, center_7, cluster_center]
 
+###formatting for cluster and background region info for the get_all_regions function below:###
+#cluster = [36.342, -42.008, 0.20]
 
-def get_all_regions(region_center_ra, region_center_dec, region_width):
-    region_center_ra = np.deg2rad(region_center_ra)
-    region_center_dec = np.deg2rad(region_center_dec)
-    region_width = np.deg2rad(region_width)
+#background_regions = [
+#    [36.30, -41.80, 0.20],
+#    [36.55, -41.95, 0.30],
+#    [36.60, -42.20, 0.15],
+#    [36.25, -42.35, 0.25],
+#]
 
-    cluster_reg = [[region_center_dec-region_width/2, 
-                    region_center_ra-region_width/2],
+def make_region(center_ra, center_dec, width):
 
-                   [region_center_dec+region_width/2, 
-                    region_center_ra+region_width/2]]
+    center_ra = np.deg2rad(center_ra)
+    center_dec = np.deg2rad(center_dec)
+    width = np.deg2rad(width)
 
-    reg_0 = [[region_center_dec+region_width/2, region_center_ra-(region_width/2)-region_width],
-             [region_center_dec+(region_width/2)+region_width, region_center_ra-region_width/2]]
+    return [
+        [center_dec - width/2, center_ra - width/2],
+        [center_dec + width/2, center_ra + width/2]
+    ]
 
-    reg_1 = [[region_center_dec+region_width/2, region_center_ra-(region_width/2)],
-             [region_center_dec+(region_width/2)+region_width, region_center_ra+region_width/2]]
 
-    reg_2 = [[region_center_dec+region_width/2, region_center_ra+(region_width/2)],
-             [region_center_dec+(region_width/2)+region_width, region_center_ra+(region_width/2)+region_width]]
+def get_all_regions(cluster_definition, background_definitions):
 
-    reg_3 = [[region_center_dec-region_width/2, region_center_ra+(region_width/2)],
-             [region_center_dec+region_width/2, region_center_ra+(region_width/2)+region_width]]
+    cluster_reg = make_region(*cluster_definition)
 
-    reg_4 = [[region_center_dec-(region_width/2)-region_width, 
-              region_center_ra+(region_width/2)],
+    regions = [
+        make_region(*region)
+        for region in background_definitions
+    ]
 
-             [region_center_dec-region_width/2, 
-              region_center_ra+(region_width/2)+region_width]]
+    return regions + [cluster_reg]
 
-    reg_5 = [[region_center_dec-(region_width/2)-region_width, 
-              region_center_ra-region_width/2],
 
-             [region_center_dec-region_width/2, 
-              region_center_ra+region_width/2]]
-
-    reg_6 = [[region_center_dec-(region_width/2)-region_width, 
-              region_center_ra-(region_width/2)-region_width],
-
-             [region_center_dec-(region_width/2), 
-              region_center_ra-(region_width/2)]]
-
-    reg_7 = [[region_center_dec-region_width/2, 
-              region_center_ra-(region_width/2)-region_width],
-
-             [region_center_dec+region_width/2, 
-              region_center_ra-(region_width/2)]]
-    
-    return [reg_0, reg_1, reg_2, reg_3, reg_4, reg_5, reg_6, reg_7, cluster_reg]
 
 def imap_dim_check(imap):
     if imap.ndim > 2:
