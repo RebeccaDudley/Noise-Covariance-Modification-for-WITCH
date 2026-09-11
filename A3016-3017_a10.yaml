@@ -1,0 +1,163 @@
+base: "base_A3016-3017.yaml"
+name: "A3016-3017_a10"
+noise_map: True
+model_map: True
+
+#mcmc:
+#  run: True
+#  num_steps: 1000
+#  num_leaps: 5
+#  sample_which: -1
+#  step_size: 1e-8
+
+
+model:
+  # Unit conversion converts from the model units (integrated pressure) to the map units (K_RJ)
+  unit_conversion: "float(wu.get_da(cfg['constants']['z'])*wu.y2K_CMB(97e9, cfg['constants']['Te'])*wu.XMpc/w.me)*1e6"
+  structures:
+    #The first structure is called a10 (A3016)
+    #a10_3016:
+      #The first structure is witch.structures.a10
+      #structure: "a10"
+      #parameters:
+        #dx_1:
+          #value: 0.0 # Units: arcsec, defined as an offset from x0 as set in base_unit.yaml
+          #to_fit: [True, True, False, True] # Fit on all but the third rounds
+          #priors: [-9.0, 9.0]
+        #dy_1:
+          #value: 0.0 # Units: arcsec, defined as an offset from y0 as set in base_unit.yaml
+          #to_fit: [True, True, False, True]
+          #priors: [-9.0, 9.0]
+        #dz_1: # Line of sight offset. This is typically unconstrained so generally should be fixed to 0
+          #value: 0.0
+        #theta: # Rotation of the model with respect to the positive y axis
+          #value: 0.0
+        #P0: # Central pressure in units of keV / cm^3
+          #value: 8.403
+        #c500: # Central concentration
+          #value: 1.177
+        #m500: # Cluster mass in M_solar
+          #value: "1.3e14"
+          #to_fit: [True, False, True, True]
+        #gamma: # Inner profile slope
+          #value: .3081
+        #alpha: # Mid profile slope
+          #value: 1.551
+        #beta: # Outer profile slope
+          #value: 5.4905
+        #z:
+          #value: 0.2195
+    #print(a10)
+    #The second structure is called a10 (A3017) ???may need to change the name here???
+    a10_3017:
+      #The first structure is witch.structures.a10
+      structure: "a10"
+      parameters:
+        dx_1:
+          value: 0 # Units: arcsec, defined as an offset from x0 as set in base_unit.yaml
+          to_fit: False #[True, True, False, True] # Fit on all but the third rounds
+          #priors: [270, 720]
+        dy_1:
+          value:  0 # Units: arcsec, defined as an offset from y0 as set in base_unit.yaml
+          to_fit: False #[True, True, False, True]
+          #priors: [100, 510]
+        dz_1: # Line of sight offset. This is typically unconstrained so generally should be fixed to 0
+          value: 0.0
+        theta: # Rotation of the model with respect to the positive y axis
+          value: 0.0
+          to_fit: False #True
+          priors: [0, 6.29] #1.57]
+        P0: # Central pressure in units of keV / cm^3
+          value: 8.403
+          to_fit: True
+          priors: [1, 15]
+        c500: # Central concentration
+          value: 1.177
+        m500: # Cluster mass in M_solar
+          value: "3.9e14"
+          to_fit: [True, False, True, True]
+        gamma: # Inner profile slope #try fixing these:
+          value: .3081
+          to_fit: True
+          priors: [0.05, 1]
+        alpha: # Mid profile slope
+          value: 1.551
+          to_fit: True
+          priors: [0.05, 3]
+        beta: # Outer profile slope
+          value: 5.4905
+          to_fit: True
+          priors: [0.05, 10]
+        z:
+          value: 0.2195
+    a10_3016:
+      #The first structure is witch.structures.a10
+      structure: "ea10"
+      parameters:
+        dx_1:
+          value: -457.2 # Units: arcsec, defined as an offset from x0 as set in base_unit.yaml
+          to_fit: False #[True, True, False, True] # Fit on all but the third rounds
+          #priors: [270, 720]
+        dy_1:
+          value: -333.6336 # Units: arcsec, defined as an offset from y0 as set in base_unit.yaml
+          to_fit: False #[True, True, False, True]
+          #priors: [100, 510]
+        dz_1: # Line of sight offset. This is typically unconstrained so generally should be fixed to 0
+          value: 0.0
+        r1:
+          value: 10
+          to_fit: False
+        r2:
+          value: 20
+          to_fit: True
+        r3:
+          value: 10
+          to_fit: False
+        theta: # Rotation of the model with respect to the positive y axis
+          value: 1.57 #eval("np.deg2rad(-10)")
+          to_fit: False #True
+          priors: [0, 6.29] #1.57]
+        P0: # Central pressure in units of keV / cm^3
+          value: 8.403
+          to_fit: True
+          priors: [1, 15]
+        c500: # Central concentration
+          value: 1.177
+        m500: # Cluster mass in M_solar
+          value: "1e14" #8e13, was 1e14 before I changed things
+          to_fit: [True, False, True, True]
+        gamma: # Inner profile slope #try fixing these:
+          value: .3081
+          to_fit: True
+          priors: [0.05, 1]
+        alpha: # Mid profile slope
+          value: 1.551
+          to_fit: True
+          priors: [0.05, 3]
+        beta: # Outer profile slope
+          value: 5.4905
+          to_fit: True
+          priors: [0.05, 10]
+        z:
+          value: 0.2195
+    bridge:
+      structure: "cylindrical_beta"
+      parameters:
+        dx_1:
+          value: 0.0
+        dy_1:
+          value: 0.0
+        dz_1:
+          value: 0.0
+        L:
+          value: 10
+        theta:
+          value: 0.0
+        P0:
+          value: 20000 #8.403
+        r_c:
+          value: 46.8
+        beta:
+          value: 1.3333
+
+
