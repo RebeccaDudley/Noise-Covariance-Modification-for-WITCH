@@ -1,0 +1,143 @@
+region_center_ra: 44.5916744
+region_center_dec: 13.2999979
+region_width: 2.5 # degrees
+
+# Cluster 1
+# c1_ra: 44.751 # degrees
+# c1_dec: 13.572
+
+c1_ra: 44.742
+c1_dec: 13.594
+
+c1_ra_min: 44.735
+c1_ra_max: 44.76
+c1_dec_min: 13.57
+c1_dec_max: 13.59
+c1_muo: -0.5566122489553409
+c1_beta_min: 0.1
+c1_beta_max: 2
+c1_rc_arcmin_min: 0.1
+c1_rc_arcmin_max: 6
+c1_R_min: 0.2
+c1_R_max: 2
+c1_theta_min: 90
+c1_theta_max: 140.
+c1_Te_mean: 8.47
+c1_Te_std: 0.25
+c1_mass: 10.2
+c1_z: 0.073664
+c1_Te_min: 1
+c1_Te_max: 15
+c1_Dtau_min: 0
+c1_Dtau_max: 0.02
+c1_A_D_min: 0
+c1_A_D_max: 5000000
+
+# Cluster 2
+c2_ra: 44.473  # hincks et al.
+c2_dec: 13.03
+
+# c2_ra: 44.464
+# c2_dec: 13.0328
+
+c2_ra_min: 44.42
+c2_ra_max: 44.48
+c2_dec_min: 13.0
+c2_dec_max: 13.1
+
+c2_muo: -0.5606024845891494
+c2_beta_min: 0.5
+c2_beta_max: 1.8
+c2_rc_arcmin_min: 0.1
+c2_rc_arcmin_max: 10 
+c2_R_min: 0.2
+c2_R_max: 5 
+c2_theta_min: 100
+c2_theta_max: 150.0
+c2_Te_mean: 7.23
+c2_Te_std: 0.19
+c2_mass: 8.7
+c2_z: 0.071806
+c2_Te_min: 4
+c2_Te_max: 12
+c2_Dtau_min: 0
+c2_Dtau_max: 0.02
+c2_A_D_min: 0
+c2_A_D_max: 1000000
+
+# Filament
+fil_ra: 44.68
+fil_dec: 13.37
+fil_ra_min: 44.5
+fil_ra_max: 44.8
+fil_dec_min: 13.2
+fil_dec_max: 13.6
+fil_z: 0.072735
+fil_muo: -0.5576451231598584
+fil_z: 0.072735
+fil_l0_min_arcmin: 0
+fil_l0_max_arcmin: 30
+fil_w0_min_arcmin: 0
+fil_w0_max_arcmin: 30
+fil_Dtau_min: 0
+fil_Dtau_max: 0.005
+
+fil_A_D_min: 0
+fil_A_D_max: 1000000
+fil_Te_min: 4
+fil_Te_max: 8
+fil_Te_mean: 6.52
+fil_Te_std: 0.35
+v_avg_min: -10000
+v_avg_max: 10000
+v_delta_min: -15000
+v_delta_max: 15000
+beam_version: "dr6v2"
+n_walkers: 100
+n_iter: 100000000
+mcmc_filename: chain.h5
+apod_pix: 20
+system_type: real
+noise_type: inst
+# Covariance related
+rad_avg_noise: 0
+rad_avg_signal: 0
+rad_avg_total: 0
+rad_avg_bsize: 200
+smooth_noise: 0 # if you want to smooth the noise cov, boolean
+smooth_signal: 0 # if you want to smooth the signal cov, boolean
+smooth_total: 1 # if you want to smooth the total cov, boolean
+# smooth_total: 0 # if you want to smooth the total cov, boolean
+smooth_signal_type: gaussian
+smooth_noise_type: gaussian
+smooth_total_type: gaussian
+smooth_signal_pix: 1.25
+smooth_noise_pix: 1.25
+smooth_total_pix: 1.25 # pixels the sigma
+apply_region_weight: False
+cluster_region_noise_rescale: False 
+cluster_region_noise_rescale_lmin: 500
+apply_transfer_to_tpsd: False 
+rescale_by_transfer: False 
+whiten_planck: False 
+whiten_act: False
+use_cluster_only_for_noise: False
+# Miscellaneaus parameters
+temp_model_type: isothermal
+repeat_h5: "true"
+model_choice: "fit_vavg"
+data:
+  - 150_pa4_act_dr6v2
+  - 220_pa4_act_dr6v2
+  - 150_pa5_act_dr6v2
+  - 98_pa5_act_dr6v2
+  - 98_pa6_act_dr6v2
+  - 150_pa6_act_dr6v2
+  - 30_npipe_planck_sky
+  - 44_npipe_planck_sky
+  - 70_npipe_planck_sky
+  - 100_npipe_planck_sky
+  - 143_npipe_planck_sky
+  - 217_npipe_planck_sky
+  - 353_npipe_planck_sky
+  - 545_npipe_planck_sky
