@@ -214,9 +214,11 @@ def process_combo_cov(combo,
 def main(config_data_fname, cov_dir=os.environ['COV_DIR'], save_cov=True):
     config_data = ut.get_config_file(config_data_fname)
 
-    cluster_region = ut.get_region(region_center_ra=config_data['region_center_ra'], 
-                                region_center_dec=config_data['region_center_dec'],
-                                region_width=config_data['region_width'])
+    region_config = config_data["covariance_regions"]
+  
+    cluster_region = cov.make_region(
+        region_config["cluster"]
+    )
 
     fname = os.getenv("ACT_DATADIR") + "act_cut_dr6v2_pa6_f150_4way_coadd_map_srcfree.fits"
 
