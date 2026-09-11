@@ -3,7 +3,7 @@ name: "A3016-3017_a10"
 noise_map: True
 model_map: True
 
-#info for the noise covariance calculations
+#info for the noise covariance calculations:
 regions:
   cluster:
     ra: 36.342
