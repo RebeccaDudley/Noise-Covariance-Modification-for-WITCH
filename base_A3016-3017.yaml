@@ -87,7 +87,7 @@ datasets:
     prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
 
 ###info for the noise covariance calculations (edit later):###
-datasets:
+covariance_datasets:
   act_f090:
     instrument: act
     frequency: 90
