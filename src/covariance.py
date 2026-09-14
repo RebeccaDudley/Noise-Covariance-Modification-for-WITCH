@@ -285,9 +285,7 @@ def get_covariance_sample(freq1,
                             data_dir2,
                             cf):
 
-    regions = ut.get_all_regions(region_center_ra=cf['region_center_ra'],
-                                 region_center_dec=cf['region_center_dec'],
-                                 region_width=cf['region_width'])
+    regions = ut.get_all_regions(cf["covariance_regions"])
     
     data_str_flag = sim_check(cf)
     
@@ -423,13 +421,14 @@ def get_covariance_sample(freq1,
         play_degrees = 0.5
 
         for idx in range(iterations):
-            region_center_ra =  cf['region_center_ra'] + np.random.uniform(-play_degrees, play_degrees)
-            region_center_dec = cf['region_center_dec'] + np.random.uniform(-play_degrees, play_degrees)
-            region_width = cf['region_width']
+            cluster_cfg = cf["covariance_regions"]["cluster"]
+            region_center_ra  = cluster_cfg["region_center_ra"]  + np.random.uniform(-play_degrees, play_degrees)
+            region_center_dec = cluster_cfg["region_center_dec"] + np.random.uniform(-play_degrees, play_degrees)
+            region_width      = cluster_cfg["region_width"]
 
             region = ut.get_region(region_center_ra=region_center_ra,
-                                region_center_dec=region_center_dec,
-                                region_width=region_width)    
+                                   region_center_dec=region_center_dec,
+                                   region_width=region_width)    
 
             coadd1_map = ut.imap_dim_check(enmap.read_map(coadd1[0], box=region)) * flux_factor1
             coadd2_map = ut.imap_dim_check(enmap.read_map(coadd2[0], box=region)) * flux_factor2
