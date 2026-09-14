@@ -9,6 +9,11 @@ regions:
     ra: 36.342
     dec: -42.008
     width: 0.20
+    
+    region_center_ra: 36.3420833
+    region_center_dec: -42.0083333
+    region_width: 2.0        # example -- choose based on your desired covariance region
+
 
   background:
     - ra: 36.30
@@ -26,6 +31,36 @@ regions:
     - ra: 36.25
       dec: -42.35
       width: 0.25
+
+  system_type: real
+  noise_type: inst
+  apod_pix: 20
+
+  rad_avg_noise: 0
+  rad_avg_signal: 0
+  rad_avg_total: 0
+  rad_avg_bsize: 200
+
+  smooth_noise: 0
+  smooth_signal: 0
+  smooth_total: 1
+
+  smooth_noise_pix: 1.25
+  smooth_signal_pix: 1.25
+  smooth_total_pix: 1.25
+
+  apply_region_weight: false
+
+  cluster_region_noise_rescale: false
+  cluster_region_noise_rescale_lmin: 500
+
+  apply_transfer_to_tpsd: false
+  rescale_by_transfer: false
+
+  whiten_planck: false
+  whiten_act: false
+
+  use_cluster_only_for_noise: false
 
 #mcmc:
 #  run: True
