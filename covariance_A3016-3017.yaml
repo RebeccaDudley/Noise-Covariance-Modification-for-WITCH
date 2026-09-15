@@ -26,6 +26,23 @@ covariance_regions:
       dec: -42.35
       width: 0.25
 
+####### change this later when you figure out how to navigate the cutouts, in tandem with the WITCH code: #######
+covariance_datasets:
+  act_f090:
+    instrument: act
+    frequency: 98
+    array: pa5
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+
+  act_f150:
+    instrument: act
+    frequency: 150
+    array: pa6
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+##############################################
+
 system_type: real
 noise_type: inst
 apod_pix: 20
