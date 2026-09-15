@@ -46,7 +46,8 @@ def get_covariance(freq1,
                    cf, 
                    debug_pix_noise=(False, False)):
 
-    regions = ut.get_all_regions(cf["covariance_regions"])
+    region_config = cf["covariance_regions"]
+    regions = ut.get_all_regions(region_config["cluster"], region_config["background"])
     
     data_str_flag = sim_check(cf)
     
