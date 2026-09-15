@@ -12,6 +12,8 @@ from astropy import units as u
 from astropy import constants as const, units as u
 from astropy.cosmology import Planck18
 
+from copy import deepcopy
+
 #import bandpass as bp
 
 plt.rcParams.update({'font.size': 18})
@@ -155,25 +157,107 @@ def bandpass_integrate(bandpass, bandpass_int, I, freq_array, del_freq):
     sz_signal = numerator / (bandpass_int) # SZ model
     return sz_signal
 
+####### new way of loading the config files so that it also uses the base and the covariance config files: #######
+def deep_merge(base, override):
+    """
+    Recursively merge two dictionaries.
+    Values in `override` take precedence over values in `base`.
+    """
+    result = deepcopy(base)
+    for key, value in override.items():
+        if (
+            key in result
+            and isinstance(result[key], dict)
+            and isinstance(value, dict)
+        ):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = deepcopy(value)
+    return result
+
+
+def _load_yaml(filename):
+    """
+    Load a single YAML file.
+    """
+    with open(filename, "r") as stream:
+        try:
+            data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            raise RuntimeError(
+                f"Error reading YAML file: {filename}"
+            ) from exc
+    return data or {}
+
+
 def get_config_file(config_file):
-    with open(config_file, 'r') as stream:
-        try:
-            config_data = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+    """
+    Load the main configuration file, together with optional
+    base and covariance configuration files.
+    
+    Expected syntax in the main YAML:
+        base: "base_A3016-3017.yaml"
+        covariance_config: "covariance_A3016-3017.yaml"
+    
+    Merge priority:
+        base < covariance < main
 
-    # add some environment variables to config_data for backward compatibility
-    # config_data["act_data_dir"] = os.environ["ACT_DATADIR"]
-    # config_data["planck_data_dir"] = os.environ["PLANCK_DATADIR"]
+    Therefore, settings in the main config override everything else.
+    """
+    config_file = os.path.abspath(config_file)
+    config_dir = os.path.dirname(config_file)
 
-    return config_data
+    # ---------------------------------------------------------
+    # 1. Load the main config
+    # ---------------------------------------------------------
+    main_config = _load_yaml(config_file)
+    final_config = {}
 
-def save_config_file(config_file, config_data):
-    with open(config_file, 'w') as stream:
-        try:
-            yaml.dump(config_data, stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+    # ---------------------------------------------------------
+    # 2. Load base config
+    # ---------------------------------------------------------
+    if "base" in main_config:
+        base_file = main_config["base"]
+
+        if not os.path.isabs(base_file):
+            base_file = os.path.join(config_dir, base_file)
+
+        base_config = _load_yaml(base_file)
+
+        final_config = deep_merge(
+            final_config,
+            base_config
+        )
+
+    # ---------------------------------------------------------
+    # 3. Load covariance config
+    # ---------------------------------------------------------
+    if "covariance_config" in main_config:
+        covariance_file = main_config["covariance_config"]
+
+        if not os.path.isabs(covariance_file):
+            covariance_file = os.path.join(
+                config_dir,
+                covariance_file
+            )
+
+        covariance_config = _load_yaml(covariance_file)
+
+        final_config = deep_merge(
+            final_config,
+            covariance_config
+        )
+
+    # ---------------------------------------------------------
+    # 4. Main config has highest priority
+    # ---------------------------------------------------------
+    final_config = deep_merge(
+        final_config,
+        main_config
+    )
+
+    return final_config
+################################################################
 
 def get_rho_crit(H_z):
     """
