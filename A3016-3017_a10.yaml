@@ -1,9 +1,9 @@
 base: "base_A3016-3017.yaml"
+covariance_config: "covariance_A3016-3017.yaml"
 name: "A3016-3017_a10"
 noise_map: True
 model_map: True
 
-covariance: "covariance_A3016-3017.yaml"
 
 #mcmc:
 #  run: True
