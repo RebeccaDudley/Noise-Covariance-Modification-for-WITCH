@@ -32,39 +32,30 @@ def process_combo_cov(combo,
                       plot_1d=False, 
                       plot_2d=False, 
                       save_cov=True):
-    freq1 = combo[0].split('_')[0]
-    array1 = combo[0].split('_')[1]
-    inst1 = combo[0].split('_')[2]
-    scan1 = combo[0].split('_')[3]
+    
+    datasets = config_data["covariance_datasets"]
 
-    freq2 = combo[1].split('_')[0]
-    array2 = combo[1].split('_')[1]
-    inst2 = combo[1].split('_')[2]
-    scan2 = combo[1].split('_')[3]
+    name1, name2 = combo
 
-    if inst1 == 'act':
-        if scan1 == 'dr6v2':
-            data_dir1 = os.getenv("ACT_DATADIR")
-        elif scan1 == 'dr6v4':
-            #data_dir1 = "/fs/lustre/scratch/agill/dr6v4/"
-            data_dir1 = "/home/gill/research/ACT/bridge/dr6v4/"
-        else: 
-            raise ValueError("Invalid scan type")
-    
-    elif inst1 == 'planck':
-        data_dir1 = os.getenv("PLANCK_DATADIR")
-    
-    if inst2 == 'act':
-        if scan2 == 'dr6v2':
-            data_dir2 = os.getenv("ACT_DATADIR")
-        elif scan2 == 'dr6v4':
-            #data_dir2 = "/fs/lustre/scratch/agill/dr6v4/"
-            data_dir2 = "/home/gill/research/ACT/bridge/dr6v4/"
-        else: 
-            raise ValueError("Invalid scan type")
-    
-    elif inst2 == 'planck':
-        data_dir2 = os.getenv("PLANCK_DATADIR")
+    ds1 = datasets[name1]
+    ds2 = datasets[name2]
+
+    freq1 = str(ds1["frequency"])
+    array1 = ds1["array"]
+    inst1 = ds1["instrument"]
+    scan1 = ds1["scan"]
+
+    freq2 = str(ds2["frequency"])
+    array2 = ds2["array"]
+    inst2 = ds2["instrument"]
+    scan2 = ds2["scan"]
+
+    data_dir1 = os.path.expandvars(ds1["data_dir"])
+    data_dir2 = os.path.expandvars(ds2["data_dir"])
+
+    # Make sure directory strings end with /
+    data_dir1 = os.path.join(data_dir1, "")
+    data_dir2 = os.path.join(data_dir2, "")
 
     print("Calculating covariance for: {}".format(combo))
 
@@ -220,7 +211,40 @@ def main(config_data_fname, cov_dir=os.environ['COV_DIR'], save_cov=True):
         region_config["cluster"]
     )
 
-    fname = os.getenv("ACT_DATADIR") + "act_cut_dr6v2_pa6_f150_4way_coadd_map_srcfree.fits"
+    ####### modification to take the shape of the first dataset listed in the provided config file: #######
+    datasets = config_data["covariance_datasets"]
+    first_name = next(iter(datasets))
+    ref = datasets[first_name]
+
+    ref_freq = str(ref["frequency"])
+    ref_array = ref["array"]
+    ref_dir = os.path.expandvars(ref["data_dir"])
+    ref_dir = os.path.join(ref_dir, "")
+
+    if config_data["system_type"] == "real":
+        data_flag = "_srcfree"
+    elif config_data["system_type"] == "sim":
+        data_flag = "_srcfree_model"
+    elif config_data["system_type"] == "real_with_sources":
+        data_flag = ""
+    else:
+        raise ValueError(f"Unknown system_type: {config_data['system_type']}")
+
+    pattern = (
+        f"{ref_dir}*{ref_array}*{ref_freq}"
+        f"*coadd*map{data_flag}.fits"
+    )
+
+    matches = sorted(glob(pattern))
+
+    if not matches:
+        raise FileNotFoundError(
+            f"No reference coadd map found matching:\n{pattern}"
+        )
+
+    fname = matches[0]
+    print(f"Using reference map for geometry: {fname}")
+    ########################################
 
     # plot_1d = 0
     # plot_2d = 0
@@ -228,7 +252,9 @@ def main(config_data_fname, cov_dir=os.environ['COV_DIR'], save_cov=True):
     data_ref = ut.imap_dim_check(enmap.read_map(fname=fname, box=cluster_region))
     data_shape, data_wcs = data_ref.shape, data_ref.wcs
 
-    combos = list(itertools.product(config_data['data'], config_data['data']))
+    dataset_names = list(config_data["covariance_datasets"].keys())
+    combos = list(itertools.product(dataset_names, dataset_names))
+  
     num_processes = multiprocessing.cpu_count()
     print(f"Number of processes: {num_processes}")
 
