@@ -202,7 +202,7 @@ def process_combo_cov(combo,
         np.save(file=ofile, arr=mean_tpsd)
 
 
-def main(config_data_fname, cov_dir=os.environ['COV_DIR'], save_cov=True):
+def main(config_data_fname, cov_dir=None, save_cov=True):
     config_data = ut.get_config_file(config_data_fname)
 
     region_config = config_data["covariance_regions"]
@@ -252,7 +252,7 @@ def main(config_data_fname, cov_dir=os.environ['COV_DIR'], save_cov=True):
     data_ref = ut.imap_dim_check(enmap.read_map(fname=fname, box=cluster_region))
     data_shape, data_wcs = data_ref.shape, data_ref.wcs
 
-    dataset_names = list(config_data["covariance_datasets"].keys())
+    dataset_names = list(datasets.keys())
     combos = list(itertools.product(dataset_names, dataset_names))
   
     num_processes = multiprocessing.cpu_count()
