@@ -1,0 +1,55 @@
+covariance_regions:
+  cluster:
+    ra: 36.3375
+    dec: -42.00833333
+    width: 0.2
+    region_center_ra: 36.3375
+    region_center_dec: -42.00833333
+    region_width: 0.2
+  background:
+  - ra: 36.04
+    dec: -41.71083333
+    width: 0.2
+  - ra: 36.635
+    dec: -41.71083333
+    width: 0.2
+  - ra: 36.04
+    dec: -42.30583333
+    width: 0.2
+  - ra: 36.635
+    dec: -42.30583333
+    width: 0.2
+covariance_datasets:
+  act_f090:
+    instrument: act
+    frequency: 98
+    array: pa5
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+  act_f150:
+    instrument: act
+    frequency: 150
+    array: pa6
+    scan: dr6v2
+    data_dir: ${ACT_DATADIR}
+system_type: real
+noise_type: inst
+apod_pix: 20
+rad_avg_noise: 0
+rad_avg_signal: 0
+rad_avg_total: 0
+rad_avg_bsize: 200
+smooth_noise: 0
+smooth_signal: 0
+smooth_total: 1
+smooth_noise_pix: 1.25
+smooth_signal_pix: 1.25
+smooth_total_pix: 1.25
+apply_region_weight: false
+cluster_region_noise_rescale: false
+cluster_region_noise_rescale_lmin: 500
+apply_transfer_to_tpsd: false
+rescale_by_transfer: false
+whiten_planck: false
+whiten_act: false
+use_cluster_only_for_noise: false
