@@ -114,6 +114,7 @@ def make_covariance_yaml(
     output_yaml,
     cluster,
     background_boxes,
+    covariance_datasets,
 ):
     """
     Build a covariance YAML file using regions defined relative
@@ -182,6 +183,8 @@ def make_covariance_yaml(
         "background": background_regions,
     }
 
+    config["covariance_datasets"] = covariance_datasets
+
     # ------------------------------------------------------------
     # 6. Write new YAML
     # ------------------------------------------------------------
@@ -217,6 +220,11 @@ map_file = "A3016-3017_map.fits"
 template_yaml = "covariance_A3016-3017.yaml"
 
 output_yaml = "covariance_A3016-3017_generated.yaml"
+
+covariance_datasets = [
+    "act_f090",
+    "act_f150",
+]
 
 
 # ----------------------------------------------------------------
@@ -298,4 +306,5 @@ make_covariance_yaml(
     output_yaml=output_yaml,
     cluster=cluster,
     background_boxes=background_boxes,
+    covariance_datasets=covariance_datasets,
 )
