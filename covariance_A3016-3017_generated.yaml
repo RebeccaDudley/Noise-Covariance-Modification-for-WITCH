@@ -1,3 +1,4 @@
+base: base_A3016-3017.yaml
 covariance_regions:
   cluster:
     ra: 36.3375
@@ -20,18 +21,8 @@ covariance_regions:
     dec: -42.30583333
     width: 0.2
 covariance_datasets:
-  act_f090:
-    instrument: act
-    frequency: 98
-    array: pa5
-    scan: dr6v2
-    data_dir: ${ACT_DATADIR}
-  act_f150:
-    instrument: act
-    frequency: 150
-    array: pa6
-    scan: dr6v2
-    data_dir: ${ACT_DATADIR}
+- act_f090
+- act_f150
 system_type: real
 noise_type: inst
 apod_pix: 20
