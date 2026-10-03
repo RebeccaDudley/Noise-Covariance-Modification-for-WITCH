@@ -1,96 +1,133 @@
 import numpy as np
 from pixell import enmap
-from glob import glob
+#from glob import glob
 import warnings
 from scipy.ndimage import gaussian_filter
 from scipy.optimize import curve_fit
 
 import utils as ut
+import os
 
 warnings.filterwarnings('ignore')
 
-def sim_check(cf):
-    """
-    Check if the data is simulated or real.
-
-    Parameters
-    ----------
-    cf : dict
-        Configuration dictionary.
-    
-    Returns
-    -------
-    data_str_flag : str
-        String flag for the data type.
-    """
-    if cf['system_type'] == 'sim':
-        data_str_flag = "_srcfree_model"
-    elif cf['system_type'] == 'real':
-        data_str_flag = "_srcfree"
-    elif cf['system_type'] == 'real_with_sources':
-        data_str_flag = ""
-    else:
-        raise ValueError("Undefined system type.")
-    return data_str_flag
 
 # COVARIANCE
-def get_covariance(freq1, 
-                   freq2, 
-                   array1, 
-                   array2, 
-                   inst1, 
-                   inst2,
-                   data_wcs, 
-                   data_dir1, 
-                   data_dir2,
+def get_covariance_files(dataset_cfg, repo_dir):
+    """
+    Resolve the exact coadd, split, and inverse-variance files
+    specified in the dataset's covariance configuration.
+    """
+
+    cov_cfg = dataset_cfg["covariance"]
+
+    data_dir = cov_cfg["data_dir"]
+
+    if not os.path.isabs(data_dir):
+        data_dir = os.path.join(repo_dir, data_dir)
+
+    data_dir = os.path.abspath(data_dir)
+
+    # Coadd products
+    coadd_map = os.path.join(
+        data_dir,
+        cov_cfg["coadd"]["map"],
+    )
+
+    coadd_ivar = os.path.join(
+        data_dir,
+        cov_cfg["coadd"]["ivar"],
+    )
+
+    # Split products
+    split_maps = [
+        os.path.join(data_dir, split["map"])
+        for split in cov_cfg["splits"]
+    ]
+
+    split_ivars = [
+        os.path.join(data_dir, split["ivar"])
+        for split in cov_cfg["splits"]
+    ]
+
+    # Basic validation
+    if len(split_maps) != len(split_ivars):
+        raise ValueError(
+            "Number of split maps does not match number "
+            "of split inverse-variance maps."
+        )
+
+    if len(split_maps) < 2:
+        raise ValueError(
+            "At least two splits are required to compute "
+            "the noise covariance."
+        )
+
+    files_to_check = (
+        [coadd_map, coadd_ivar]
+        + split_maps
+        + split_ivars
+    )
+
+    for fname in files_to_check:
+        if not os.path.exists(fname):
+            raise FileNotFoundError(
+                f"Covariance input file does not exist:\n{fname}"
+            )
+
+    return {
+        "coadd_map": coadd_map,
+        "coadd_ivar": coadd_ivar,
+        "split_maps": split_maps,
+        "split_ivars": split_ivars,
+    }
+
+def get_covariance(ds1,
+                   ds2,
+                   data_wcs,
+                   repo_dir,
                    cf, 
                    debug_pix_noise=(False, False)):
+
+    freq1 = str(ds1["frequency"])
+    array1 = ds1["array"]
+    inst1 = ds1["instrument"]
+    
+    freq2 = str(ds2["frequency"])
+    array2 = ds2["array"]
+    inst2 = ds2["instrument"]
 
     region_config = cf["covariance_regions"]
     regions = ut.get_all_regions(region_config["cluster"], region_config["background"])
     
-    data_str_flag = sim_check(cf)
-    
-    # File names
-    splits1_str = f"{data_dir1}*{array1}*{freq1}*set*map{data_str_flag}.fits"
-    splits2_str = f"{data_dir2}*{array2}*{freq2}*set*map{data_str_flag}.fits"
+    files1 = get_covariance_files(ds1,repo_dir,)
+    files2 = get_covariance_files(ds2,repo_dir,)
 
-    splits1 = np.sort(glob(splits1_str))
-    splits2 = np.sort(glob(splits2_str))
+    coadd1 = files1["coadd_map"]
+    coadd2 = files2["coadd_map"]
 
-    coadd1_str = f"{data_dir1}*{array1}*{freq1}*coadd*map{data_str_flag}.fits"
-    coadd2_str = f"{data_dir2}*{array2}*{freq2}*coadd*map{data_str_flag}.fits"
+    coadd_ivar1 = files1["coadd_ivar"]
+    coadd_ivar2 = files2["coadd_ivar"]
 
-    coadd1 = np.sort(glob(coadd1_str))
-    coadd2 = np.sort(glob(coadd2_str))
+    splits1 = files1["split_maps"]
+    splits2 = files2["split_maps"]
 
-    ivars1_str = f"{data_dir1}*{array1}*{freq1}*set*ivar.fits"
-    ivars2_str = f"{data_dir2}*{array2}*{freq2}*set*ivar.fits"
-
-    ivars1 = np.sort(glob(ivars1_str))
-    ivars2 = np.sort(glob(ivars2_str))
+    ivars1 = files1["split_ivars"]
+    ivars2 = files2["split_ivars"]
 
     # We want the coadd maps to be in Jy/sr
     # We want the ivar maps to be in 1 / (Jy/sr)^2
     flux_factor1 = ut.flux_factor(array1, freq1) # Jy/uK/sr
     flux_factor2 = ut.flux_factor(array2, freq2) # Jy/uK/sr
 
-    if len(coadd1) == 0 or len(coadd2) == 0: 
-        raise ValueError("Length of coadded maps is zero.")
-
     all_regions_npsd, all_regions_spsd = [], []
 
     if cf['apply_region_weight']:
         print("Applying region weights.")
-        ivarc1_str = f"{data_dir1}*{array1}*{freq1}*coadd*ivar.fits"
-        ivarc2_str = f"{data_dir2}*{array2}*{freq2}*coadd*ivar.fits"
-        ivarc1 = np.sort(glob(ivarc1_str))
-        ivarc2 = np.sort(glob(ivarc2_str))
         # computing weights per region for combining the noise power spectra across regions
         coadd1_ivar_list, coadd2_ivar_list = [], []
-        for _, region in enumerate(regions):
-            coadd1_ivar = ut.imap_dim_check(enmap.read_map(ivarc1[0], box=region)) / flux_factor1**2
-            coadd2_ivar = ut.imap_dim_check(enmap.read_map(ivarc2[0], box=region)) / flux_factor2**2
+        for region in regions:
+            coadd1_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) / flux_factor1**2
+            coadd2_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) / flux_factor2**2
             coadd1_ivar_list.append(coadd1_ivar)
             coadd2_ivar_list.append(coadd2_ivar)
         sum_coadd1_ivar = np.sum(coadd1_ivar_list[:-1], axis=0)
@@ -99,12 +136,12 @@ def get_covariance(freq1,
     # Loop over all regions (now regular noise and signal cov calculations)
     for _, region in enumerate(regions):
 
-        coadd1_map = ut.imap_dim_check(enmap.read_map(coadd1[0], box=region)) * flux_factor1
-        coadd2_map = ut.imap_dim_check(enmap.read_map(coadd2[0], box=region)) * flux_factor2
+        coadd1_map = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) * flux_factor1
+        coadd2_map = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) * flux_factor2
 
         if cf['apply_region_weight']:
-            coadd1_ivar = ut.imap_dim_check(enmap.read_map(ivarc1[0], box=region)) / flux_factor1**2
-            coadd2_ivar = ut.imap_dim_check(enmap.read_map(ivarc2[0], box=region)) / flux_factor2**2
+            coadd1_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) / flux_factor1**2
+            coadd2_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) / flux_factor2**2
             region_weight = np.mean(coadd1_ivar * coadd2_ivar / (sum_coadd1_ivar*sum_coadd2_ivar))
 
         ivars1_list, ivars2_list = [], []
@@ -275,36 +312,34 @@ def get_covariance(freq1,
 
     return mean_tpsd_cluster, mean_npsd, mean_spsd, all_regions_npsd, all_regions_spsd
 
-def get_covariance_sample(freq1, 
-                            freq2, 
-                            array1, 
-                            array2, 
-                            inst1, 
-                            inst2,
-                            data_wcs, 
-                            data_dir1, 
-                            data_dir2,
-                            cf):
+def get_covariance_sample(ds1,
+                          ds2,
+                          data_wcs,
+                          repo_dir,
+                          cf,):
+
+    files1 = get_covariance_files(ds1, repo_dir)
+    files2 = get_covariance_files(ds2, repo_dir)
 
     regions = ut.get_all_regions(cf["covariance_regions"])
     
     data_str_flag = sim_check(cf)
     
     # File names
-    splits1_str = f"{data_dir1}*{array1}*{freq1}*set*map{data_str_flag}.fits"
-    splits2_str = f"{data_dir2}*{array2}*{freq2}*set*map{data_str_flag}.fits"
+    splits1_str = f"files1["split_maps"]"
+    splits2_str = f"files2["split_maps"]"
 
     splits1 = np.sort(glob(splits1_str))
     splits2 = np.sort(glob(splits2_str))
 
-    coadd1_str = f"{data_dir1}*{array1}*{freq1}*coadd*map{data_str_flag}.fits"
-    coadd2_str = f"{data_dir2}*{array2}*{freq2}*coadd*map{data_str_flag}.fits"
+    coadd1_str = f"files1["coadd_map"]"
+    coadd2_str = f"files2["coadd_map"]"
 
     coadd1 = np.sort(glob(coadd1_str))
     coadd2 = np.sort(glob(coadd2_str))
 
-    ivars1_str = f"{data_dir1}*{array1}*{freq1}*set*ivar.fits"
-    ivars2_str = f"{data_dir2}*{array2}*{freq2}*set*ivar.fits"
+    ivars1_str = f"files1["split_ivars"]"
+    ivars2_str = f"files2["split_ivars"]"
 
     ivars1 = np.sort(glob(ivars1_str))
     ivars2 = np.sort(glob(ivars2_str))
@@ -325,8 +360,8 @@ def get_covariance_sample(freq1,
     # Loop over all regions (now regular noise and signal cov calculations)
     for _, region in enumerate(regions):
 
-        coadd1_map = ut.imap_dim_check(enmap.read_map(coadd1[0], box=region)) * flux_factor1
-        coadd2_map = ut.imap_dim_check(enmap.read_map(coadd2[0], box=region)) * flux_factor2
+        coadd1_map = ut.imap_dim_check(enmap.read_map(coadd1, box=region)) * flux_factor1
+        coadd2_map = ut.imap_dim_check(enmap.read_map(coadd2, box=region)) * flux_factor2
 
         ivars1_list, ivars2_list = [], []
         
