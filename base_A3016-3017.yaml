@@ -11,11 +11,10 @@ constants:
   z: 0.2195
 
 paths:
-
   # Location of TOD files
   # If an absolute path then that is used directly
   # If a relative path taken relative to MJ_TODROOT
-  maps: "/home/dudleyre/A3016-3017"
+  maps: ""
   #tods: "ACT1407"
   #glob: "Signal_TOD*.fits" # Pattern to search for TODs with
   ndo: False # ?
@@ -50,7 +49,7 @@ coords:
   y0: "Angle('-41:54:56.2536 degrees').to(u.radian).value"
 
 cov_files: #move into a keyword argument
-  - "/home/dudleyre/A3016-3017/A3016-3017_ivar.fits"
+  - "A3016-3017_ivar.fits"
 #  - "/home/dudleyre/A3016-3017/A3016-3017.npy"
 #  - /path/to/cov2.npy
 #  - /path/to/cov3.npy
@@ -85,12 +84,75 @@ datasets:
       fwhm2: "90" #"270" # FWHM in arcseconds of the second gaussian
       amp2: 0.0 #0.0192 # Amplitude of the second gaussian
     prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
+    
     ##### edits for computing the noise covariance: #####
     frequency: 90
     array: pa5
     scan: dr6v2
-    data_dir: ${ACT_DATADIR}
+    data_dir: "ACT_splits+coadds/pa5_f090"
 
+    coadd:
+      map: "act_dr6.02_pa5_f090_4way_coadd_map_srcfree.fits"
+      ivar: "act_dr6.02_pa5_f090_4way_coadd_ivar.fits"
+
+    splits:
+      - map: "act_dr6.02_pa5_f090_4way_set0_map_srcfree.fits"
+        ivar: "act_dr6.02_pa5_f090_4way_set0_ivar.fits"
+
+      - map: "act_dr6.02_pa5_f090_4way_set1_map_srcfree.fits"
+        ivar: "act_dr6.02_pa5_f090_4way_set1_ivar.fits"
+
+      - map: "act_dr6.02_pa5_f090_4way_set2_map_srcfree.fits"
+        ivar: "act_dr6.02_pa5_f090_4way_set2_ivar.fits"
+
+      - map: "act_dr6.02_pa5_f090_4way_set3_map_srcfree.fits"
+        ivar: "act_dr6.02_pa5_f090_4way_set3_ivar.fits"
+
+  act_f150:
+    noise:
+      class: "jm.NoiseMapCov"
+      args: "[cfg['cov_files']]"
+      kwargs: "{}"
+
+    funcs:
+      get_files: "amf.get_files"
+      load: "amf.load_maps"
+      get_info: "amf.get_info"
+      make_beam: "amf.make_beam"
+      preproc: "amf.preproc"
+      postproc: "amf.postproc"
+      postfit: "amf.postfit"
+
+    beam:
+      fwhm1: "84"
+      amp1: 1.0
+      fwhm2: "90"
+      amp2: 0.0
+
+    prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
+
+    frequency: 150
+    array: "pa4"
+    scan: "dr6v2"
+
+    data_dir: "ACT_splits+coadds/pa4_f150"
+
+    coadd:
+      map: "act_dr6.02_pa4_f150_4way_coadd_map_srcfree.fits"
+      ivar: "act_dr6.02_pa4_f150_4way_coadd_ivar.fits"
+
+    splits:
+      - map: "act_dr6.02_pa4_f150_4way_set0_map_srcfree.fits"
+        ivar: "act_dr6.02_pa4_f150_4way_set0_ivar.fits"
+
+      - map: "act_dr6.02_pa4_f150_4way_set1_map_srcfree.fits"
+        ivar: "act_dr6.02_pa4_f150_4way_set1_ivar.fits"
+
+      - map: "act_dr6.02_pa4_f150_4way_set2_map_srcfree.fits"
+        ivar: "act_dr6.02_pa4_f150_4way_set2_ivar.fits"
+
+      - map: "act_dr6.02_pa4_f150_4way_set3_map_srcfree.fits"
+        ivar: "act_dr6.02_pa4_f150_4way_set3_ivar.fits"
 
 # Setting for the fitter
 fitting:
