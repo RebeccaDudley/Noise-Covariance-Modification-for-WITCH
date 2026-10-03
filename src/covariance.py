@@ -97,7 +97,7 @@ def get_covariance(ds1,
     inst2 = ds2["instrument"]
 
     region_config = cf["covariance_regions"]
-    regions = ut.get_all_regions(region_config["cluster"], region_config["background"])
+    regions = ut.get_all_regions(region_config)
     
     files1 = get_covariance_files(ds1,repo_dir,)
     files2 = get_covariance_files(ds2,repo_dir,)
@@ -325,24 +325,18 @@ def get_covariance_sample(ds1,
     
     data_str_flag = sim_check(cf)
     
-    # File names
-    splits1_str = f"files1["split_maps"]"
-    splits2_str = f"files2["split_maps"]"
+    # Exact file paths from YAML
+    splits1 = files1["split_maps"]
+    splits2 = files2["split_maps"]
 
-    splits1 = np.sort(glob(splits1_str))
-    splits2 = np.sort(glob(splits2_str))
+    coadd1 = files1["coadd_map"]
+    coadd2 = files2["coadd_map"]
 
-    coadd1_str = f"files1["coadd_map"]"
-    coadd2_str = f"files2["coadd_map"]"
+    ivars1 = files1["split_ivars"]
+    ivars2 = files2["split_ivars"]
 
-    coadd1 = np.sort(glob(coadd1_str))
-    coadd2 = np.sort(glob(coadd2_str))
-
-    ivars1_str = f"files1["split_ivars"]"
-    ivars2_str = f"files2["split_ivars"]"
-
-    ivars1 = np.sort(glob(ivars1_str))
-    ivars2 = np.sort(glob(ivars2_str))
+    coadd_ivar1 = files1["coadd_ivar"]
+    coadd_ivar2 = files2["coadd_ivar"]
 
     # We want the coadd maps to be in Jy/sr
     # We want the ivar maps to be in 1 / (Jy/sr)^2

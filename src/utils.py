@@ -13,7 +13,7 @@ from astropy.cosmology import Planck18
 
 from copy import deepcopy
 
-#import bandpass as bp
+import bandpass as bp
 
 plt.rcParams.update({'font.size': 18})
 warnings.filterwarnings('ignore')
@@ -311,7 +311,6 @@ def get_r500(z, mass):
 
     return r500_pix.value
 
-''' 
 def flux_factor(array, freq):
     """
     Returns Jy/K/sr
@@ -338,7 +337,7 @@ def flux_factor(array, freq):
     flux_factor = np.trapz(y=bandpass*dplanck, x=freq_array, dx=del_freq) / (bandpass_int * u.GHz)
 
     return flux_factor.to(u.Jy/u.microKelvin/u.steradian).value
-'''
+
     
 def rad_avg_2d(image, bsize):
     bl, l = enmap.lbin(map=image, bsize=bsize)

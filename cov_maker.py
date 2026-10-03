@@ -66,15 +66,10 @@ def process_combo_cov(combo,
     data_shape, data_wcs = geometry
     debug_pix_noise = (False, False)
 
-    mean_tpsd, mean_npsd, mean_spsd, all_regions_npsd, all_regions_spsd = cov.get_covariance(freq1=freq1, 
-                                                                                             freq2=freq2,
-                                                                                             array1=array1, 
-                                                                                             array2=array2,
-                                                                                             inst1=inst1, 
-                                                                                             inst2=inst2,
-                                                                                             data_dir1=data_dir1,
-                                                                                             data_dir2=data_dir2,
+    mean_tpsd, mean_npsd, mean_spsd, all_regions_npsd, all_regions_spsd = cov.get_covariance(ds1=ds1,
+                                                                                             ds2=ds2,
                                                                                              data_wcs=geometry[1],
+                                                                                             repo_dir=dir_head,
                                                                                              cf=config_data,
                                                                                              debug_pix_noise=debug_pix_noise,)
 
@@ -211,7 +206,7 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
 
     region_config = config_data["covariance_regions"]
   
-    cluster_region = cov.make_region(
+    cluster_region = ut.make_region(
         region_config["cluster"]
     )
 

@@ -86,27 +86,31 @@ datasets:
     prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
     
     ##### edits for computing the noise covariance: #####
-    frequency: 90
-    array: pa5
-    scan: dr6v2
-    data_dir: "ACT_splits+coadds/pa5_f090"
+    instrument: "act"
+    band: "f090"
+    frequency: 98
+    array: "pa5"
+    scan: "dr6v2"
 
-    coadd:
-      map: "act_dr6.02_pa5_f090_4way_coadd_map_srcfree.fits"
-      ivar: "act_dr6.02_pa5_f090_4way_coadd_ivar.fits"
+    covariance:
+      data_dir: "ACT_splits+coadds/pa5_f090"
 
-    splits:
-      - map: "act_dr6.02_pa5_f090_4way_set0_map_srcfree.fits"
-        ivar: "act_dr6.02_pa5_f090_4way_set0_ivar.fits"
+      coadd:
+        map: "act_cut_cmb_night_pa5_f090_3pass_4way_coadd_map_srcfree.fits"
+        ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_coadd_ivar.fits"
 
-      - map: "act_dr6.02_pa5_f090_4way_set1_map_srcfree.fits"
-        ivar: "act_dr6.02_pa5_f090_4way_set1_ivar.fits"
+      splits:
+        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set0_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set0_ivar.fits"
 
-      - map: "act_dr6.02_pa5_f090_4way_set2_map_srcfree.fits"
-        ivar: "act_dr6.02_pa5_f090_4way_set2_ivar.fits"
+        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set1_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set1_ivar.fits"
 
-      - map: "act_dr6.02_pa5_f090_4way_set3_map_srcfree.fits"
-        ivar: "act_dr6.02_pa5_f090_4way_set3_ivar.fits"
+        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set2_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set2_ivar.fits"
+
+        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set3_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set3_ivar.fits"
 
   act_f150:
     noise:
@@ -131,28 +135,31 @@ datasets:
 
     prefactor: "float(wu.get_da(cfg['constants']['z'])*wu.XMpc/wu.me)"
 
+    instrument: "act"
+    band: "f150"
     frequency: 150
     array: "pa4"
     scan: "dr6v2"
 
-    data_dir: "ACT_splits+coadds/pa4_f150"
+    covariance:
+      data_dir: "ACT_splits+coadds/pa4_f150"
 
-    coadd:
-      map: "act_dr6.02_pa4_f150_4way_coadd_map_srcfree.fits"
-      ivar: "act_dr6.02_pa4_f150_4way_coadd_ivar.fits"
+      coadd:
+        map: "act_cut_cmb_night_pa4_f150_3pass_4way_coadd_map_srcfree.fits"
+        ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_coadd_ivar.fits"
 
-    splits:
-      - map: "act_dr6.02_pa4_f150_4way_set0_map_srcfree.fits"
-        ivar: "act_dr6.02_pa4_f150_4way_set0_ivar.fits"
+      splits:
+        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set0_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set0_ivar.fits"
 
-      - map: "act_dr6.02_pa4_f150_4way_set1_map_srcfree.fits"
-        ivar: "act_dr6.02_pa4_f150_4way_set1_ivar.fits"
+        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set1_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set1_ivar.fits"
 
-      - map: "act_dr6.02_pa4_f150_4way_set2_map_srcfree.fits"
-        ivar: "act_dr6.02_pa4_f150_4way_set2_ivar.fits"
+        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set2_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set2_ivar.fits"
 
-      - map: "act_dr6.02_pa4_f150_4way_set3_map_srcfree.fits"
-        ivar: "act_dr6.02_pa4_f150_4way_set3_ivar.fits"
+        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set3_map_srcfree.fits"
+          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set3_ivar.fits"
 
 # Setting for the fitter
 fitting:
