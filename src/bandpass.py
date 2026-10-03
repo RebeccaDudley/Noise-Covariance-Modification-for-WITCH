@@ -12,14 +12,14 @@ def freq_to_x(frequency):
     return (const.h * frequency.to(u.s**-1) / (const.k_B * 2.725 * u.K)).value
 
 def load_passband_frequency(fname, dire_base):
-    return np.load(f"{dire_base}/passbands/{fname}")
+    return np.load(f"passbands/{fname}")
 
 def load_passband_transmission(fname, dire_base):
-    return np.load(f"{dire_base}/passbands/{fname}")
+    return np.load(f"passbands/{fname}")
 
 def integrate_passband(bandpass, freq_arr):
     del_freq = ((np.max(freq_arr) - np.min(freq_arr))  / len(freq_arr))
-    return np.trapz(y=np.array(bandpass), x=np.array(freq_arr), dx=del_freq)
+    return np.trapezoid(y=np.array(bandpass), x=np.array(freq_arr), dx=del_freq)
 
 # Load passband transmissions
 passband_pa4_150 = load_passband_transmission("passband_pa4_f150.npy", dire_base=dire_base)

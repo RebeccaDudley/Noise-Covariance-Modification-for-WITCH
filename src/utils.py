@@ -149,7 +149,7 @@ def find_nearest(array, value):
 
 @jit(nopython=True, parallel=False)
 def bandpass_integrate(bandpass, bandpass_int, I, freq_array, del_freq):
-    numerator = np.trapz(y=bandpass * I,
+    numerator = np.trapezoid(y=bandpass * I,
                             x=freq_array, 
                             dx=del_freq)
     
@@ -334,7 +334,7 @@ def flux_factor(array, freq):
     dplanck = ( ((2*const.k_B**3*Tcmb**2*xcmb**4*np.exp(xcmb)) 
                / ((const.c*const.h)**2 * (np.exp(xcmb)-1)**2.)).to(u.Jansky/u.K) / u.steradian )
     
-    flux_factor = np.trapz(y=bandpass*dplanck, x=freq_array, dx=del_freq) / (bandpass_int * u.GHz)
+    flux_factor = np.trapezoid(y=bandpass*dplanck, x=freq_array, dx=del_freq) / (bandpass_int * u.GHz)
 
     return flux_factor.to(u.Jy/u.microKelvin/u.steradian).value
 
