@@ -4,7 +4,7 @@ import dotenv
 dotenv.load_dotenv()
 
 import sys, os
-dir_head = os.environ.get("REPO_DIR", ".")
+dir_head = os.path.abspath(os.environ.get("REPO_DIR", "."))
 sys.path.insert(0, os.path.join(dir_head, "src"))
 
 import numpy as np
@@ -33,7 +33,8 @@ def process_combo_cov(combo,
                       plot_2d=False, 
                       save_cov=True):
     
-    datasets = config_data["covariance_datasets"]
+    covariance_dataset_names = config_data["covariance_datasets"]
+    datasets = config_data["datasets"]
 
     name1, name2 = combo
 
@@ -50,14 +51,17 @@ def process_combo_cov(combo,
     inst2 = ds2["instrument"]
     scan2 = ds2["scan"]
 
-    data_dir1 = os.path.expandvars(ds1["data_dir"])
-    data_dir2 = os.path.expandvars(ds2["data_dir"])
+    cov_cfg1 = ds1["covariance"]
+    cov_cfg2 = ds2["covariance"]
+
+    data_dir1 = os.path.join(dir_head, cov_cfg1["data_dir"], ) 
+    data_dir2 = os.path.join(dir_head, cov_cfg2["data_dir"], )
 
     # Make sure directory strings end with /
     data_dir1 = os.path.join(data_dir1, "")
     data_dir2 = os.path.join(data_dir2, "")
 
-    print("Calculating covariance for: {}".format(combo))
+    print(f"Calculating covariance for: {combo}")
 
     data_shape, data_wcs = geometry
     debug_pix_noise = (False, False)
@@ -212,38 +216,25 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
     )
 
     ####### modification to take the shape of the first dataset listed in the provided config file: #######
-    datasets = config_data["covariance_datasets"]
-    first_name = next(iter(datasets))
+    covariance_dataset_names = config_data["covariance_datasets"]
+    datasets = config_data["datasets"]
+    
+    first_name = covariance_dataset_names[0]
     ref = datasets[first_name]
 
-    ref_freq = str(ref["frequency"])
-    ref_array = ref["array"]
-    ref_dir = os.path.expandvars(ref["data_dir"])
-    ref_dir = os.path.join(ref_dir, "")
+    ref_cov = ref["covariance"]
 
-    if config_data["system_type"] == "real":
-        data_flag = "_srcfree"
-    elif config_data["system_type"] == "sim":
-        data_flag = "_srcfree_model"
-    elif config_data["system_type"] == "real_with_sources":
-        data_flag = ""
-    else:
-        raise ValueError(f"Unknown system_type: {config_data['system_type']}")
+    ref_dir = os.path.join(dir_head,ref_cov["data_dir"],)
 
-    pattern = (
-        f"{ref_dir}*{ref_array}*{ref_freq}"
-        f"*coadd*map{data_flag}.fits"
-    )
+    fname = os.path.join(ref_dir,ref_cov["coadd"]["map"],)
 
-    matches = sorted(glob(pattern))
-
-    if not matches:
+    if not os.path.exists(fname):
         raise FileNotFoundError(
-            f"No reference coadd map found matching:\n{pattern}"
+            f"Reference coadd map does not exist:\n{fname}"
         )
 
-    fname = matches[0]
     print(f"Using reference map for geometry: {fname}")
+
     ########################################
 
     # plot_1d = 0
@@ -252,8 +243,11 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
     data_ref = ut.imap_dim_check(enmap.read_map(fname=fname, box=cluster_region))
     data_shape, data_wcs = data_ref.shape, data_ref.wcs
 
-    dataset_names = list(datasets.keys())
-    combos = list(itertools.product(dataset_names, dataset_names))
+    dataset_names = covariance_dataset_names
+    combos = list(itertools.product(dataset_names, dataset_names,))
+
+    for combo in combos:
+        print(f"  {combo}")
   
     num_processes = multiprocessing.cpu_count()
     print(f"Number of processes: {num_processes}")
