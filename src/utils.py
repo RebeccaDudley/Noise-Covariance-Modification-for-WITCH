@@ -8,7 +8,6 @@ import yaml
 
 from numba import njit, jit
 
-from astropy import units as u
 from astropy import constants as const, units as u
 from astropy.cosmology import Planck18
 
