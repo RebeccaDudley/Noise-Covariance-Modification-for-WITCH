@@ -175,6 +175,54 @@ def get_covariance(ds1,
         sum_coadd1_ivar = np.sum(coadd1_ivar_list[:-1], axis=0)
         sum_coadd2_ivar = np.sum(coadd2_ivar_list[:-1], axis=0)
 
+    ##### new stuff for background cutouts to be same size:#####
+    # ------------------------------------------------------------
+    # Determine common square pixel geometry
+    # ------------------------------------------------------------
+
+    region_shapes = []
+
+    for i, region in enumerate(regions):
+
+        map1_test = ut.imap_dim_check(
+            enmap.read_map(
+                coadd1,
+                box=region,
+            )
+        )
+
+        map2_test = ut.imap_dim_check(
+            enmap.read_map(
+                coadd2,
+                box=region,
+            )
+        )
+
+        shape1 = map1_test.shape[-2:]
+        shape2 = map2_test.shape[-2:]
+    
+        region_shapes.append(shape1)
+        region_shapes.append(shape2)
+
+        print(
+            f"Region {i}: "
+            f"dataset 1 shape = {shape1}, "
+            f"dataset 2 shape = {shape2}"
+        )
+
+
+    # Find the smallest pixel dimension present anywhere
+    target_side = min(
+        min(ny, nx)
+        for ny, nx in region_shapes
+    )
+
+    print(
+        f"Using common square covariance geometry: "
+        f"({target_side}, {target_side})"
+    )
+    ################################
+    
     # Loop over all regions (now regular noise and signal cov calculations)
     for _, region in enumerate(regions):
 
