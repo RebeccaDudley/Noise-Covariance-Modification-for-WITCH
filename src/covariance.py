@@ -81,6 +81,48 @@ def get_covariance_files(dataset_cfg, repo_dir):
         "split_ivars": split_ivars,
     }
 
+##### new stuff for background cutouts to be same size:#####
+def center_crop_square(imap, target_side):
+    """
+    Center-crop a 2D enmap to a square of shape
+    (target_side, target_side).
+    """
+
+    ny, nx = imap.shape[-2:]
+
+    if ny < target_side or nx < target_side:
+        raise ValueError(
+            f"Map shape {imap.shape} is smaller than "
+            f"requested square size {target_side}"
+        )
+
+    y0 = (ny - target_side) // 2
+    x0 = (nx - target_side) // 2
+
+    return imap[
+        y0:y0 + target_side,
+        x0:x0 + target_side,
+    ]
+
+def read_square_map(fname, region, target_side):
+    """
+    Read a region from a map and center-crop it to the
+    common square covariance geometry.
+    """
+
+    imap = ut.imap_dim_check(
+        enmap.read_map(
+            fname,
+            box=region,
+        )
+    )
+
+    return center_crop_square(
+        imap,
+        target_side,
+    )
+###############################################
+
 def get_covariance(ds1,
                    ds2,
                    data_wcs,
