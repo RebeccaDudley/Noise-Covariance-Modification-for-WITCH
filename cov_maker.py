@@ -261,7 +261,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Make covariance matrices')
     parser.add_argument('--config', type=str, help='Path to the config file')
-    parser.add_argument('--cov', type=str, default=os.environ['COV_DIR'], help='Path to the directory to save the covariances')
+    parser.add_argument('--cov', type=str, default=os.environ.get('COV_DIR', "./covariances"), help='Path to the directory to save the covariances')
     parser.add_argument('--clear', action='store_true', help='Clear the directory before saving the covariances')
     args = parser.parse_args()
     if not os.path.exists(args.cov):
