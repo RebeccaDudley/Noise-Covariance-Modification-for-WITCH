@@ -168,8 +168,8 @@ def get_covariance(ds1,
         # computing weights per region for combining the noise power spectra across regions
         coadd1_ivar_list, coadd2_ivar_list = [], []
         for region in regions:
-            coadd1_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) / flux_factor1**2
-            coadd2_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) / flux_factor2**2
+            coadd1_ivar = read_square_map(coadd_ivar1, region, target_side, ) / flux_factor1**2
+            coadd2_ivar = read_square_map(coadd_ivar2, region, target_side, ) / flux_factor2**2
             coadd1_ivar_list.append(coadd1_ivar)
             coadd2_ivar_list.append(coadd2_ivar)
         sum_coadd1_ivar = np.sum(coadd1_ivar_list[:-1], axis=0)
@@ -221,13 +221,12 @@ def get_covariance(ds1,
         f"Using common square covariance geometry: "
         f"({target_side}, {target_side})"
     )
-    ################################
     
     # Loop over all regions (now regular noise and signal cov calculations)
     for _, region in enumerate(regions):
 
-        coadd1_map = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) * flux_factor1
-        coadd2_map = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) * flux_factor2
+        coadd1_map = (read_square_map(coadd1, region, target_side,)) * flux_factor1
+        coadd2_map = (read_square_map(coadd2, region, target_side,)) * flux_factor2
 
         if cf['apply_region_weight']:
             coadd1_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) / flux_factor1**2
@@ -237,11 +236,11 @@ def get_covariance(ds1,
         ivars1_list, ivars2_list = [], []
         
         for j in range(len(ivars1)):
-            ivar_map1 = ut.imap_dim_check(enmap.read_map(ivars1[j], box=region)) / flux_factor1**2
+            ivar_map1 = read_square_map(ivars1[j], region, target_side,) / flux_factor1**2
             ivars1_list.append(ivar_map1)
 
         for j in range(len(ivars2)):
-            ivar_map2 = ut.imap_dim_check(enmap.read_map(ivars2[j], box=region)) / flux_factor2**2
+            ivar_map2 = read_square_map(ivars2[j], region, target_side,) / flux_factor2**2
             ivars2_list.append(ivar_map2)
 
         sum_ivar1 = np.sum(ivars1_list, axis=0)
@@ -272,11 +271,12 @@ def get_covariance(ds1,
         if noise_type_bool:
             for idx_split in range(max_split_number):
                 
-                split1 = ut.imap_dim_check(enmap.read_map(splits1[idx_split], box=region)) * flux_factor1
-                split2 = ut.imap_dim_check(enmap.read_map(splits2[idx_split], box=region)) * flux_factor2
+                split1 = read_square_map(splits1[idx_split], region, target_side, ) * flux_factor1
+                split2 = read_square_map(splits2[idx_split], region, target_side, ) * flux_factor2
 
-                ivar1 = ut.imap_dim_check(enmap.read_map(ivars1[idx_split], box=region)) / flux_factor1**2
-                ivar2 = ut.imap_dim_check(enmap.read_map(ivars2[idx_split], box=region)) / flux_factor2**2
+                ivar1 = read_square_map(ivars1[idx_split], region, target_side, ) / flux_factor1**2
+                ivar2 = read_square_map(ivars2[idx_split], region, target_side, ) / flux_factor2**2
+                ################################
 
                 diff1 = split1 - coadd1_map
                 diff2 = split2 - coadd2_map
