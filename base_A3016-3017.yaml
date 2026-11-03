@@ -14,7 +14,7 @@ paths:
   # Location of TOD files
   # If an absolute path then that is used directly
   # If a relative path taken relative to MJ_TODROOT
-  maps: ""
+  maps: "ACT_splits+coadds"
   #tods: "ACT1407"
   #glob: "Signal_TOD*.fits" # Pattern to search for TODs with
   ndo: False # ?
@@ -49,10 +49,12 @@ coords:
   y0: "Angle('-41:54:56.2536 degrees').to(u.radian).value"
 
 cov_files: #move into a keyword argument
-  - "A3016-3017_ivar.fits"
-#  - "/home/dudleyre/A3016-3017/A3016-3017.npy"
-#  - /path/to/cov2.npy
-#  - /path/to/cov3.npy
+  - "/covariances/cov_150_pa4_act_dr6v2_150_pa4_act_dr6v2.npy"
+  - "/covariances/cov_150_pa4_act_dr6v2_98_pa5_act_dr6v2.npy"
+  - "/covariances/cov_98_pa5_act_dr6v2_150_pa4_act_dr6v2.npy"
+  - "/covariances/cov_98_pa5_act_dr6v2_98_pa5_act_dr6v2.npy"
+#  - /path/to/cov5.npy
+#  - /path/to/cov6.npy
 
 # Settings that define the datasets we are working with 
 # For now you can only have one, but this structure is in prep for the future
