@@ -256,7 +256,7 @@ covariance_datasets = [
 cluster = {
     "x_frac": 0.5,
     "y_frac": 0.5,
-    "width_frac": 0.20,
+    "width_frac": '&cluster_width' 0.20,
 }
 
 
@@ -270,28 +270,28 @@ background_boxes = [
     {
         "x_frac": 0.20,
         "y_frac": 0.80,
-        "width_frac": 0.20,
+        "width_frac": '*cluster_width',
     },
 
     # upper-right
     {
         "x_frac": 0.80,
         "y_frac": 0.80,
-        "width_frac": 0.20,
+        "width_frac": '*cluster_width',
     },
 
     # lower-left
     {
         "x_frac": 0.20,
         "y_frac": 0.20,
-        "width_frac": 0.20,
+        "width_frac": '*cluster_width',
     },
 
     # lower-right
     {
         "x_frac": 0.80,
         "y_frac": 0.20,
-        "width_frac": 0.20,
+        "width_frac": '*cluster_width',
     },
 ]
 
