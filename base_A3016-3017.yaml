@@ -95,24 +95,22 @@ datasets:
     scan: "dr6v2"
 
     covariance:
-      data_dir: "ACT_splits+coadds/pa5_f090"
-
       coadd:
-        map: "act_cut_cmb_night_pa5_f090_3pass_4way_coadd_map_srcfree.fits"
-        ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_coadd_ivar.fits"
+        map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_coadd_map_srcfree.fits"
+        ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_coadd_ivar.fits"
 
       splits:
-        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set0_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set0_ivar.fits"
+        - map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set0_map_srcfree.fits"
+          ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set0_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set1_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set1_ivar.fits"
+        - map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set1_map_srcfree.fits"
+          ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set1_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set2_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set2_ivar.fits"
+        - map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set2_map_srcfree.fits"
+          ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set2_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa5_f090_3pass_4way_set3_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa5_f090_3pass_4way_set3_ivar.fits"
+        - map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set3_map_srcfree.fits"
+          ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_set3_ivar.fits"
 
   act_f150:
     noise:
@@ -144,24 +142,22 @@ datasets:
     scan: "dr6v2"
 
     covariance:
-      data_dir: "ACT_splits+coadds/pa4_f150"
-
       coadd:
-        map: "act_cut_cmb_night_pa4_f150_3pass_4way_coadd_map_srcfree.fits"
-        ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_coadd_ivar.fits"
+        map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_coadd_map_srcfree.fits"
+        ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_coadd_ivar.fits"
 
       splits:
-        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set0_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set0_ivar.fits"
+        - map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set0_map_srcfree.fits"
+          ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set0_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set1_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set1_ivar.fits"
+        - map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set1_map_srcfree.fits"
+          ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set1_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set2_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set2_ivar.fits"
+        - map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set2_map_srcfree.fits"
+          ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set2_ivar.fits"
 
-        - map: "act_cut_cmb_night_pa4_f150_3pass_4way_set3_map_srcfree.fits"
-          ivar: "act_cut_cmb_night_pa4_f150_3pass_4way_set3_ivar.fits"
+        - map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set3_map_srcfree.fits"
+          ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_set3_ivar.fits"
 
 # Setting for the fitter
 fitting:
