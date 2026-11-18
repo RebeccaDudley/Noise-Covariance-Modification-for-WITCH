@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 # Files from the src dir in git
 import utils as ut
 import covariance as cov
-from src.map_geometry import require_sky_coverage
+from map_geometry import covariance_region_geometries, require_covariance_coverage
 
 import matplotlib.pyplot as plt
 
@@ -32,7 +32,8 @@ def process_combo_cov(combo,
                       cov_dir,
                       plot_1d=False, 
                       plot_2d=False, 
-                      save_cov=True):
+                      save_cov=True,
+                      region_geometries=None):
     
     covariance_dataset_names = config_data["covariance_datasets"]
     datasets = config_data["datasets"]
@@ -72,7 +73,8 @@ def process_combo_cov(combo,
                                                                                              data_wcs=geometry[1],
                                                                                              repo_dir=dir_head,
                                                                                              cf=config_data,
-                                                                                             debug_pix_noise=debug_pix_noise,)
+                                                                                             debug_pix_noise=debug_pix_noise,
+                                                                                             region_geometries=region_geometries)
 
     # apply ell-dependent scaling to the pa4-pa5 noise power spectrum
     if config_data['cluster_region_noise_rescale'] and (combo[0] == combo[1] and (array1 in ['pa4', 'pa5'])):
@@ -207,30 +209,24 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
 
     region_config = config_data["covariance_regions"]
     regions = ut.get_all_regions(region_config)
-    cluster_region = regions[-1]
     dataset_names = config_data["covariance_datasets"]
     datasets = config_data["datasets"]
     dataset_files = [
         cov.get_covariance_files(datasets[name], dir_head) for name in dataset_names
     ]
+    fname = dataset_files[0]["coadd_map"]
+    print(f"Using reference map for geometry: {fname}")
+    region_geometries = covariance_region_geometries(fname, regions)
+    geometry = region_geometries[-1]
+    print(f"Using {len(region_geometries)} covariance tiles with shape {geometry[0]}")
+
     for files in dataset_files:
         paths = [
             files["coadd_map"], files["coadd_ivar"],
             *files["split_maps"], *files["split_ivars"],
         ]
         for path in paths:
-            require_sky_coverage(path, regions)
-
-    fname = dataset_files[0]["coadd_map"]
-    print(f"Using reference map for geometry: {fname}")
-
-    ########################################
-
-    # plot_1d = 0
-    # plot_2d = 0
-
-    data_ref = ut.imap_dim_check(enmap.read_map(fname=fname, box=cluster_region))
-    data_shape, data_wcs = data_ref.shape, data_ref.wcs
+            require_covariance_coverage(path, region_geometries)
 
     combos = list(itertools.product(dataset_names, dataset_names,))
 
@@ -244,7 +240,8 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
         fun = partial(process_combo_cov, 
                       config_data=config_data,
                       cov_dir=cov_dir,
-                      geometry=(data_shape, data_wcs),
+                      geometry=geometry,
+                      region_geometries=region_geometries,
                       plot_1d=False, 
                       plot_2d=False, 
                       save_cov=save_cov)
