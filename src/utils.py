@@ -390,6 +390,7 @@ def make_region(region):
     """
     Convert a region definition from the config file into
     [[dec_min, ra_min], [dec_max, ra_max]] in radians.
+    The width is measured on the sky along both axes at the box center.
 
     Expected format:
     {
@@ -401,11 +402,16 @@ def make_region(region):
 
     center_ra = np.deg2rad(region["ra"])
     center_dec = np.deg2rad(region["dec"])
-    width = np.deg2rad(region["width"])
+    dec_half_width = np.deg2rad(region["width"]) / 2
+    if not 0 < dec_half_width < np.pi / 2 - abs(center_dec):
+        raise ValueError(
+            "Region width must be positive and the box must stay between the celestial poles."
+        )
+    ra_half_width = dec_half_width / np.cos(center_dec)
 
     return [
-        [center_dec - width / 2, center_ra - width / 2],
-        [center_dec + width / 2, center_ra + width / 2],
+        [center_dec - dec_half_width, center_ra - ra_half_width],
+        [center_dec + dec_half_width, center_ra + ra_half_width],
     ]
 
 

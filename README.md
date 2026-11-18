@@ -23,10 +23,13 @@ Add `--overwrite` to replace existing cutouts. The script crops on the source
 pixel grid and writes the adjusted celestial WCS. A thumbnail whose FITS
 footprint is centered on (0°, 0°) cannot be used as the source for this field.
 
+The cluster box width is an angle on the sky. Its RA coordinate span is divided
+by the cosine of the cluster declination to match its north–south sky span.
+The box sets the tile dimensions on the first covariance dataset's coadd grid.
+Background regions use their configured sky centers and the same pixel
+dimensions as the cluster. All input maps must share that pixel grid.
+
 Regenerate the four configured covariance arrays after replacing the inputs.
-The cluster box sets the tile dimensions in pixels using the first covariance
-dataset's coadd grid. Background regions use their configured sky centers and
-the same pixel dimensions as the cluster. All input maps must share that pixel grid.
 
 ```sh
 python cov_maker.py --config covariance_A3016-3017.yaml --cov covariances
