@@ -95,6 +95,7 @@ datasets:
     scan: "dr6v2"
 
     covariance:
+      data_dir: "ACT_splits+coadds"
       coadd:
         map: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_coadd_map_srcfree.fits"
         ivar: "pa5_f090/act_cut_cmb_night_pa5_f090_3pass_4way_coadd_ivar.fits"
@@ -142,6 +143,7 @@ datasets:
     scan: "dr6v2"
 
     covariance:
+      data_dir: "ACT_splits+coadds"
       coadd:
         map: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_coadd_map_srcfree.fits"
         ivar: "pa4_f150/act_cut_cmb_night_pa4_f150_3pass_4way_coadd_ivar.fits"
