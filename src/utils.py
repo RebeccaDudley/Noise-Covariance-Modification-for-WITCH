@@ -714,7 +714,7 @@ def check_real_covariance(matrix):
 
     # Check if the matrix is positive semidefinite
     eigenvalues = np.linalg.eigvals(matrix)
-    if np.any(eigenvalues) < 0:
+    if np.any(eigenvalues < 0):
         return False, "Matrix is not positive semidefinite"
 
     return True, "Matrix is a valid real covariance matrix"
