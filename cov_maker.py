@@ -21,6 +21,7 @@ warnings.filterwarnings("ignore")
 # Files from the src dir in git
 import utils as ut
 import covariance as cov
+from src.map_geometry import require_sky_coverage
 
 import matplotlib.pyplot as plt
 
@@ -205,29 +206,22 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
     config_data = ut.get_config_file(config_data_fname)
 
     region_config = config_data["covariance_regions"]
-  
-    cluster_region = ut.make_region(
-        region_config["cluster"]
-    )
-
-    ####### modification to take the shape of the first dataset listed in the provided config file: #######
-    covariance_dataset_names = config_data["covariance_datasets"]
+    regions = ut.get_all_regions(region_config)
+    cluster_region = regions[-1]
+    dataset_names = config_data["covariance_datasets"]
     datasets = config_data["datasets"]
-    
-    first_name = covariance_dataset_names[0]
-    ref = datasets[first_name]
+    dataset_files = [
+        cov.get_covariance_files(datasets[name], dir_head) for name in dataset_names
+    ]
+    for files in dataset_files:
+        paths = [
+            files["coadd_map"], files["coadd_ivar"],
+            *files["split_maps"], *files["split_ivars"],
+        ]
+        for path in paths:
+            require_sky_coverage(path, regions)
 
-    ref_cov = ref["covariance"]
-
-    ref_dir = os.path.join(dir_head,ref_cov["data_dir"],)
-
-    fname = os.path.join(ref_dir,ref_cov["coadd"]["map"],)
-
-    if not os.path.exists(fname):
-        raise FileNotFoundError(
-            f"Reference coadd map does not exist:\n{fname}"
-        )
-
+    fname = dataset_files[0]["coadd_map"]
     print(f"Using reference map for geometry: {fname}")
 
     ########################################
@@ -238,7 +232,6 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
     data_ref = ut.imap_dim_check(enmap.read_map(fname=fname, box=cluster_region))
     data_shape, data_wcs = data_ref.shape, data_ref.wcs
 
-    dataset_names = covariance_dataset_names
     combos = list(itertools.product(dataset_names, dataset_names,))
 
     for combo in combos:
