@@ -33,7 +33,8 @@ def process_combo_cov(combo,
                       plot_1d=False, 
                       plot_2d=False, 
                       save_cov=True,
-                      region_geometries=None):
+                      region_geometries=None,
+                      save_reverse=False):
     
     covariance_dataset_names = config_data["covariance_datasets"]
     datasets = config_data["datasets"]
@@ -199,9 +200,17 @@ def process_combo_cov(combo,
                     interval_type='zscale')
 
     if save_cov:
-        ofile = f"{cov_dir}/cov_{freq1}_{array1}_{inst1}_{scan1}_{freq2}_{array2}_{inst2}_{scan2}.npy"
+        label1 = f"{freq1}_{array1}_{inst1}_{scan1}"
+        label2 = f"{freq2}_{array2}_{inst2}_{scan2}"
+        ofile = f"{cov_dir}/cov_{label1}_{label2}.npy"
         print(f"Saving covariance to {ofile}")
         np.save(file=ofile, arr=mean_tpsd)
+
+        if save_reverse and name1 != name2:
+            # Swapping the two maps conjugates the spectrum at each Fourier mode.
+            reverse_file = f"{cov_dir}/cov_{label2}_{label1}.npy"
+            print(f"Saving covariance to {reverse_file}")
+            np.save(file=reverse_file, arr=np.conjugate(mean_tpsd))
 
 
 def main(config_data_fname, cov_dir=None, save_cov=True):
@@ -228,7 +237,7 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
         for path in paths:
             require_covariance_coverage(path, region_geometries)
 
-    combos = list(itertools.product(dataset_names, dataset_names,))
+    combos = list(itertools.combinations_with_replacement(dataset_names, 2))
 
     for combo in combos:
         print(f"  {combo}")
@@ -244,7 +253,8 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
                       region_geometries=region_geometries,
                       plot_1d=False, 
                       plot_2d=False, 
-                      save_cov=save_cov)
+                      save_cov=save_cov,
+                      save_reverse=True)
         pool.map(fun, combos)
 
 if __name__ == "__main__":
