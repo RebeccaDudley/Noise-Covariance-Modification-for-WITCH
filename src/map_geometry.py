@@ -52,6 +52,29 @@ def require_covariance_coverage(filename, regions):
             )
 
 
+def sample_covariance_regions(cluster_geometry, filenames, count):
+    """Sample cluster-sized tiles within the shared FITS pixel footprint."""
+    tile_shape, tile_wcs = cluster_geometry
+    # Preserve the original search radius of half a degree along each axis.
+    max_offset = np.floor(0.5 / np.abs(tile_wcs.wcs.cdelt[::-1])).astype(int)
+    lower, upper = -max_offset, max_offset.copy()
+    for filename in filenames:
+        shape, wcs = enmap.read_map_geometry(filename)
+        start, stop = enmap.pixbox_of(wcs, tile_shape, tile_wcs)
+        lower = np.maximum(lower, -start)
+        upper = np.minimum(upper, np.array(shape[-2:]) - stop)
+
+    if np.any(lower > upper):
+        raise ValueError("No sampled covariance tile fits inside all input FITS maps.")
+
+    regions = []
+    for offset in np.random.randint(lower, upper + 1, size=(count, 2)):
+        wcs = tile_wcs.deepcopy()
+        wcs.wcs.crpix -= offset[::-1]
+        regions.append((tile_shape, wcs))
+    return regions
+
+
 def require_sky_coverage(filename, regions):
     """Reject FITS inputs whose celestial footprint misses a requested box."""
     shape, wcs = enmap.read_map_geometry(str(filename))
