@@ -6,6 +6,7 @@ from scipy.ndimage import gaussian_filter
 from scipy.optimize import curve_fit
 
 import utils as ut
+from map_geometry import covariance_region_geometries, require_covariance_coverage
 import os
 
 warnings.filterwarnings('ignore')
@@ -81,54 +82,17 @@ def get_covariance_files(dataset_cfg, repo_dir):
         "split_ivars": split_ivars,
     }
 
-##### new stuff for background cutouts to be same size:#####
-def center_crop_square(imap, target_side):
-    """
-    Center-crop a 2D enmap to a square of shape
-    (target_side, target_side).
-    """
+def read_region_map(filename, geometry):
+    return ut.imap_dim_check(enmap.read_map(filename, geometry=geometry))
 
-    ny, nx = imap.shape[-2:]
-
-    if ny < target_side or nx < target_side:
-        raise ValueError(
-            f"Map shape {imap.shape} is smaller than "
-            f"requested square size {target_side}"
-        )
-
-    y0 = (ny - target_side) // 2
-    x0 = (nx - target_side) // 2
-
-    return imap[
-        y0:y0 + target_side,
-        x0:x0 + target_side,
-    ]
-
-def read_square_map(fname, region, target_side):
-    """
-    Read a region from a map and center-crop it to the
-    common square covariance geometry.
-    """
-
-    imap = ut.imap_dim_check(
-        enmap.read_map(
-            fname,
-            box=region,
-        )
-    )
-
-    return center_crop_square(
-        imap,
-        target_side,
-    )
-###############################################
 
 def get_covariance(ds1,
                    ds2,
                    data_wcs,
                    repo_dir,
                    cf, 
-                   debug_pix_noise=(False, False)):
+                   debug_pix_noise=(False, False),
+                   region_geometries=None):
 
     freq1 = str(ds1["frequency"])
     array1 = ds1["array"]
@@ -138,9 +102,6 @@ def get_covariance(ds1,
     array2 = ds2["array"]
     inst2 = ds2["instrument"]
 
-    region_config = cf["covariance_regions"]
-    regions = ut.get_all_regions(region_config)
-    
     files1 = get_covariance_files(ds1,repo_dir,)
     files2 = get_covariance_files(ds2,repo_dir,)
 
@@ -156,6 +117,13 @@ def get_covariance(ds1,
     ivars1 = files1["split_ivars"]
     ivars2 = files2["split_ivars"]
 
+    if region_geometries is None:
+        sky_regions = ut.get_all_regions(cf["covariance_regions"])
+        region_geometries = covariance_region_geometries(coadd1, sky_regions)
+        paths = {coadd1, coadd2, coadd_ivar1, coadd_ivar2, *splits1, *splits2, *ivars1, *ivars2}
+        for path in sorted(paths):
+            require_covariance_coverage(path, region_geometries)
+
     # We want the coadd maps to be in Jy/sr
     # We want the ivar maps to be in 1 / (Jy/sr)^2
     flux_factor1 = ut.flux_factor(array1, freq1) # Jy/uK/sr
@@ -165,82 +133,28 @@ def get_covariance(ds1,
 
     if cf['apply_region_weight']:
         print("Applying region weights.")
-        # computing weights per region for combining the noise power spectra across regions
-        coadd1_ivar_list, coadd2_ivar_list = [], []
-        for region in regions:
-            coadd1_ivar = read_square_map(coadd_ivar1, region, target_side, ) / flux_factor1**2
-            coadd2_ivar = read_square_map(coadd_ivar2, region, target_side, ) / flux_factor2**2
-            coadd1_ivar_list.append(coadd1_ivar)
-            coadd2_ivar_list.append(coadd2_ivar)
-        sum_coadd1_ivar = np.sum(coadd1_ivar_list[:-1], axis=0)
-        sum_coadd2_ivar = np.sum(coadd2_ivar_list[:-1], axis=0)
+        coadd1_ivars = [read_region_map(coadd_ivar1, region) / flux_factor1**2 for region in region_geometries]
+        coadd2_ivars = [read_region_map(coadd_ivar2, region) / flux_factor2**2 for region in region_geometries]
+        sum_coadd1_ivar = np.sum(coadd1_ivars[:-1], axis=0)
+        sum_coadd2_ivar = np.sum(coadd2_ivars[:-1], axis=0)
 
-    ##### new stuff for background cutouts to be same size:#####
-    # ------------------------------------------------------------
-    # Determine common square pixel geometry
-    # ------------------------------------------------------------
-
-    region_shapes = []
-
-    for i, region in enumerate(regions):
-
-        map1_test = ut.imap_dim_check(
-            enmap.read_map(
-                coadd1,
-                box=region,
-            )
-        )
-
-        map2_test = ut.imap_dim_check(
-            enmap.read_map(
-                coadd2,
-                box=region,
-            )
-        )
-
-        shape1 = map1_test.shape[-2:]
-        shape2 = map2_test.shape[-2:]
-    
-        region_shapes.append(shape1)
-        region_shapes.append(shape2)
-
-        print(
-            f"Region {i}: "
-            f"dataset 1 shape = {shape1}, "
-            f"dataset 2 shape = {shape2}"
-        )
-
-
-    # Find the smallest pixel dimension present anywhere
-    target_side = min(
-        min(ny, nx)
-        for ny, nx in region_shapes
-    )
-
-    print(
-        f"Using common square covariance geometry: "
-        f"({target_side}, {target_side})"
-    )
-    
-    # Loop over all regions (now regular noise and signal cov calculations)
-    for _, region in enumerate(regions):
-
-        coadd1_map = (read_square_map(coadd1, region, target_side,)) * flux_factor1
-        coadd2_map = (read_square_map(coadd2, region, target_side,)) * flux_factor2
+    for i, region in enumerate(region_geometries):
+        coadd1_map = read_region_map(coadd1, region) * flux_factor1
+        coadd2_map = read_region_map(coadd2, region) * flux_factor2
 
         if cf['apply_region_weight']:
-            coadd1_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar1, box=region)) / flux_factor1**2
-            coadd2_ivar = ut.imap_dim_check(enmap.read_map(coadd_ivar2, box=region)) / flux_factor2**2
-            region_weight = np.mean(coadd1_ivar * coadd2_ivar / (sum_coadd1_ivar*sum_coadd2_ivar))
+            region_weight = np.mean(
+                coadd1_ivars[i] * coadd2_ivars[i] / (sum_coadd1_ivar * sum_coadd2_ivar)
+            )
 
         ivars1_list, ivars2_list = [], []
         
         for j in range(len(ivars1)):
-            ivar_map1 = read_square_map(ivars1[j], region, target_side,) / flux_factor1**2
+            ivar_map1 = read_region_map(ivars1[j], region) / flux_factor1**2
             ivars1_list.append(ivar_map1)
 
         for j in range(len(ivars2)):
-            ivar_map2 = read_square_map(ivars2[j], region, target_side,) / flux_factor2**2
+            ivar_map2 = read_region_map(ivars2[j], region) / flux_factor2**2
             ivars2_list.append(ivar_map2)
 
         sum_ivar1 = np.sum(ivars1_list, axis=0)
@@ -271,11 +185,11 @@ def get_covariance(ds1,
         if noise_type_bool:
             for idx_split in range(max_split_number):
                 
-                split1 = read_square_map(splits1[idx_split], region, target_side, ) * flux_factor1
-                split2 = read_square_map(splits2[idx_split], region, target_side, ) * flux_factor2
+                split1 = read_region_map(splits1[idx_split], region) * flux_factor1
+                split2 = read_region_map(splits2[idx_split], region) * flux_factor2
 
-                ivar1 = read_square_map(ivars1[idx_split], region, target_side, ) / flux_factor1**2
-                ivar2 = read_square_map(ivars2[idx_split], region, target_side, ) / flux_factor2**2
+                ivar1 = read_region_map(ivars1[idx_split], region) / flux_factor1**2
+                ivar2 = read_region_map(ivars2[idx_split], region) / flux_factor2**2
                 ################################
 
                 diff1 = split1 - coadd1_map
