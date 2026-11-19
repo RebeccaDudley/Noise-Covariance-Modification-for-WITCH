@@ -77,6 +77,10 @@ def process_combo_cov(combo,
                                                                                              debug_pix_noise=debug_pix_noise,
                                                                                              region_geometries=region_geometries)
 
+    # Save the component estimates before the writer's optional rescaling.
+    signal_covariance = mean_spsd
+    noise_covariance = mean_npsd
+
     # apply ell-dependent scaling to the pa4-pa5 noise power spectrum
     if config_data['cluster_region_noise_rescale'] and (combo[0] == combo[1] and (array1 in ['pa4', 'pa5'])):
         print(f"Rescaling cluster region noise for {combo[0]}")
@@ -202,15 +206,21 @@ def process_combo_cov(combo,
     if save_cov:
         label1 = f"{freq1}_{array1}_{inst1}_{scan1}"
         label2 = f"{freq2}_{array2}_{inst2}_{scan2}"
-        ofile = f"{cov_dir}/cov_{label1}_{label2}.npy"
-        print(f"Saving covariance to {ofile}")
-        np.save(file=ofile, arr=mean_tpsd)
+        spectra = (
+            ("cov", mean_tpsd),
+            ("signal_cov", signal_covariance),
+            ("noise_cov", noise_covariance),
+        )
+        for prefix, spectrum in spectra:
+            output = os.path.join(cov_dir, f"{prefix}_{label1}_{label2}.npy")
+            print(f"Saving covariance to {output}")
+            np.save(output, spectrum)
 
-        if save_reverse and name1 != name2:
-            # Swapping the two maps conjugates the spectrum at each Fourier mode.
-            reverse_file = f"{cov_dir}/cov_{label2}_{label1}.npy"
-            print(f"Saving covariance to {reverse_file}")
-            np.save(file=reverse_file, arr=np.conjugate(mean_tpsd))
+            if save_reverse and name1 != name2:
+                # Swapping the two maps conjugates the spectrum at each Fourier mode.
+                reverse_output = os.path.join(cov_dir, f"{prefix}_{label2}_{label1}.npy")
+                print(f"Saving covariance to {reverse_output}")
+                np.save(reverse_output, np.conjugate(spectrum))
 
 
 def main(config_data_fname, cov_dir=None, save_cov=True):
