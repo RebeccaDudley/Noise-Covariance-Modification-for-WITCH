@@ -16,6 +16,48 @@ import os
 warnings.filterwarnings('ignore')
 
 
+def radial_power_scale(auto_power, ell):
+    """Estimate the positive radial power profile of an auto-spectrum."""
+    nonzero = ell > 0
+    if not np.any(nonzero):
+        return np.ones_like(ell)
+
+    radii = ell[nonzero]
+    rings = np.rint(radii / radii.min()).astype(int)
+    counts = np.bincount(rings)
+    radius_sum = np.bincount(rings, weights=radii)
+    power_sum = np.bincount(rings, weights=np.real(auto_power[nonzero]))
+    usable = (counts > 0) & np.isfinite(power_sum) & (power_sum > 0)
+    if not np.any(usable):
+        return np.ones_like(ell)
+
+    log_radius = np.log(radius_sum[usable] / counts[usable])
+    log_power = np.log(power_sum[usable] / counts[usable])
+    return np.exp(np.interp(np.log(np.maximum(ell, radii.min())), log_radius, log_power))
+
+
+def smooth_total_covariances(spectra, ell, sigma):
+    """Smooth Fourier pixels after dividing out each band's radial power."""
+    if not sigma:
+        return spectra
+
+    scales = {
+        a: np.sqrt(radial_power_scale(spectrum, ell))
+        for (a, b), spectrum in spectra.items()
+        if a == b
+    }
+    keep = ell > 0
+    weight = gaussian_filter(keep.astype(float), sigma, mode="wrap")
+    result = {}
+    for (a, b), spectrum in spectra.items():
+        scale = scales[a] * scales[b]
+        normalized = np.where(keep, spectrum / scale, 0)
+        averaged = gaussian_filter(normalized, sigma, mode="wrap")
+        np.divide(averaged, weight, out=averaged, where=weight > 0)
+        result[a, b] = np.where(keep, averaged * scale, spectrum)
+    return result
+
+
 # COVARIANCE
 def get_covariance_files(dataset_cfg, repo_dir):
     """

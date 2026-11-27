@@ -34,9 +34,9 @@ def process_combo_cov(combo,
                       plot_2d=False, 
                       save_cov=True,
                       region_geometries=None,
-                      save_reverse=False):
+                      save_reverse=False,
+                      return_spectra=False):
     
-    covariance_dataset_names = config_data["covariance_datasets"]
     datasets = config_data["datasets"]
 
     name1, name2 = combo
@@ -44,25 +44,7 @@ def process_combo_cov(combo,
     ds1 = datasets[name1]
     ds2 = datasets[name2]
 
-    freq1 = str(ds1["frequency"])
     array1 = ds1["array"]
-    inst1 = ds1["instrument"]
-    scan1 = ds1["scan"]
-
-    freq2 = str(ds2["frequency"])
-    array2 = ds2["array"]
-    inst2 = ds2["instrument"]
-    scan2 = ds2["scan"]
-
-    cov_cfg1 = ds1["covariance"]
-    cov_cfg2 = ds2["covariance"]
-
-    data_dir1 = os.path.join(dir_head, cov_cfg1["data_dir"], ) 
-    data_dir2 = os.path.join(dir_head, cov_cfg2["data_dir"], )
-
-    # Make sure directory strings end with /
-    data_dir1 = os.path.join(data_dir1, "")
-    data_dir2 = os.path.join(data_dir2, "")
 
     print(f"Calculating covariance for: {combo}")
 
@@ -156,33 +138,7 @@ def process_combo_cov(combo,
             mean_tpsd = gaussian_filter(input=mean_tpsd, sigma=config_data['smooth_total_pix'])
             mean_tpsd = enmap.ndmap(np.array(mean_tpsd), wcs=data_wcs)
 
-    # rescale planck noise level below pixel scale such that ACT will dominate in those scales
-    if config_data['whiten_planck']:
-        if (inst1 == 'planck' and (combo[0] == combo[1])):
-            modlmap = enmap.modlmap(data_shape, data_wcs)
-            # 1. taking mean power from tpsd in the range 5000-6000
-            if float(freq1) >= 80:
-                limits = [5000, 6000]
-            else:
-                limits = [2000, 3000]
-            m = np.logical_and(modlmap >= limits[0], modlmap <= limits[1])
-            mean_var = np.mean(np.abs(mean_tpsd[m]))
-            m2 = modlmap>limits[1]
-            mean_tpsd[m2] = mean_var
-            mean_tpsd = mean_tpsd + 0j
-            print(f"whitening {combo} large ell noise with {mean_var:.2e}")
-
-    if config_data['whiten_act']:
-        if (inst1 == 'act' and (combo[0] == combo[1])):
-            modlmap = enmap.modlmap(data_shape, data_wcs)
-            # 1. taking mean power from tpsd in the range 5000-6000
-            limits = [6000, 8000]
-            m = np.logical_and(modlmap >= limits[0], modlmap <= limits[1])
-            mean_var = np.mean(np.abs(mean_tpsd[m]))
-            m = modlmap>limits[0]
-            mean_tpsd[m] = mean_var
-            mean_tpsd = mean_tpsd + 0j
-            print(f"whitening {combo} large ell noise with {mean_var:.2e}")
+    mean_tpsd = whiten_total(mean_tpsd, config_data, geometry, ds1, combo)
 
     if plot_1d:
         binsize = 200
@@ -203,24 +159,51 @@ def process_combo_cov(combo,
                     title="Total power spectrum",
                     interval_type='zscale')
 
+    spectra = {
+        "cov": mean_tpsd,
+        "signal_cov": signal_covariance,
+        "noise_cov": noise_covariance,
+    }
     if save_cov:
-        label1 = f"{freq1}_{array1}_{inst1}_{scan1}"
-        label2 = f"{freq2}_{array2}_{inst2}_{scan2}"
-        spectra = (
-            ("cov", mean_tpsd),
-            ("signal_cov", signal_covariance),
-            ("noise_cov", noise_covariance),
-        )
-        for prefix, spectrum in spectra:
-            output = os.path.join(cov_dir, f"{prefix}_{label1}_{label2}.npy")
-            print(f"Saving covariance to {output}")
-            np.save(output, spectrum)
+        save_pair_covariances(combo, config_data, cov_dir, spectra, save_reverse)
+    if return_spectra:
+        return spectra
 
-            if save_reverse and name1 != name2:
-                # Swapping the two maps conjugates the spectrum at each Fourier mode.
-                reverse_output = os.path.join(cov_dir, f"{prefix}_{label2}_{label1}.npy")
-                print(f"Saving covariance to {reverse_output}")
-                np.save(reverse_output, np.conjugate(spectrum))
+
+def whiten_total(spectrum, config, geometry, dataset, combo):
+    """Apply the configured high-ell whitening to an auto-spectrum."""
+    instrument = dataset["instrument"]
+    if combo[0] != combo[1] or not config.get(f"whiten_{instrument}", False):
+        return spectrum
+    if instrument not in ("act", "planck"):
+        return spectrum
+
+    ell = enmap.modlmap(*geometry)
+    limits = (6000, 8000)
+    if instrument == "planck":
+        limits = (2000, 3000) if float(dataset["frequency"]) < 80 else (5000, 6000)
+    low, high = limits
+    power = np.mean(np.abs(spectrum[(ell >= low) & (ell <= high)]))
+    spectrum = spectrum.copy()
+    spectrum[ell > (low if instrument == "act" else high)] = power
+    print(f"whitening {combo} large ell noise with {power:.2e}")
+    return spectrum + 0j
+
+
+def save_pair_covariances(combo, config, cov_dir, spectra, save_reverse):
+    labels = [
+        "{frequency}_{array}_{instrument}_{scan}".format(**config["datasets"][name])
+        for name in combo
+    ]
+    for prefix, spectrum in spectra.items():
+        output = os.path.join(cov_dir, f"{prefix}_{labels[0]}_{labels[1]}.npy")
+        print(f"Saving covariance to {output}")
+        np.save(output, spectrum)
+
+        if save_reverse and combo[0] != combo[1]:
+            reverse = os.path.join(cov_dir, f"{prefix}_{labels[1]}_{labels[0]}.npy")
+            print(f"Saving covariance to {reverse}")
+            np.save(reverse, np.conjugate(spectrum))
 
 
 def main(config_data_fname, cov_dir=None, save_cov=True):
@@ -255,17 +238,34 @@ def main(config_data_fname, cov_dir=None, save_cov=True):
     num_processes = multiprocessing.cpu_count()
     print(f"Number of processes: {num_processes}")
 
+    smooth_total = config_data["smooth_total"]
+    worker_config = config_data
+    if smooth_total:
+        worker_config = dict(config_data, smooth_total=False, whiten_act=False, whiten_planck=False)
+
     with multiprocessing.Pool(processes=num_processes) as pool:
         fun = partial(process_combo_cov, 
-                      config_data=config_data,
+                      config_data=worker_config,
                       cov_dir=cov_dir,
                       geometry=geometry,
                       region_geometries=region_geometries,
                       plot_1d=False, 
                       plot_2d=False, 
-                      save_cov=save_cov,
-                      save_reverse=True)
-        pool.map(fun, combos)
+                      save_cov=save_cov and not smooth_total,
+                      save_reverse=True,
+                      return_spectra=smooth_total)
+        pairs = pool.map(fun, combos)
+
+    if smooth_total:
+        totals = cov.smooth_total_covariances(
+            {pair: spectra["cov"] for pair, spectra in zip(combos, pairs)},
+            enmap.modlmap(*geometry),
+            config_data["smooth_total_pix"],
+        )
+        if save_cov:
+            for pair, spectra in zip(combos, pairs):
+                spectra["cov"] = whiten_total(totals[pair], config_data, geometry, datasets[pair[0]], pair)
+                save_pair_covariances(pair, config_data, cov_dir, spectra, save_reverse=True)
 
 if __name__ == "__main__":
     import argparse
