@@ -31,3 +31,9 @@ the same pixel dimensions as the cluster. All input maps must share that pixel g
 ```sh
 python cov_maker.py --config covariance_A3016-3017.yaml --cov covariances
 ```
+
+For the total covariance files written by `cov_maker.py`, `smooth_total`
+smooths each Fourier spectrum relative to the radial auto-power profiles
+of its two bands. The Gaussian wraps around the FFT grid and skips the
+zero mode when averaging. `smooth_total_pix` remains the Gaussian width
+in Fourier pixels.
