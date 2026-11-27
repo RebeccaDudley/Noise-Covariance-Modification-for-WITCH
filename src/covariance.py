@@ -197,6 +197,7 @@ def get_covariance(ds1,
         sum_coadd2_ivar = np.sum(coadd2_ivars[:-1], axis=0)
 
     for i, region in enumerate(region_geometries):
+        apod_pix = np.minimum(cf['apod_pix'], region[0])
         coadd1_map = read_region_map(coadd1, region) * flux_factor1
         coadd2_map = read_region_map(coadd2, region) * flux_factor2
 
@@ -240,10 +241,10 @@ def get_covariance(ds1,
                 diff1_norm = diff1 * ivar1_norm
                 diff2_norm = diff2 * ivar2_norm
 
-                apod_mask1 = (enmap.apod(diff1_norm*0+1, cf['apod_pix']))
+                apod_mask1 = (enmap.apod(diff1_norm*0+1, apod_pix))
                 diff1_apod = diff1_norm * apod_mask1
 
-                apod_mask2 = (enmap.apod(diff2_norm*0+1, cf['apod_pix']))
+                apod_mask2 = (enmap.apod(diff2_norm*0+1, apod_pix))
                 diff2_apod = diff2_norm * apod_mask2
 
                 diff1_fft = np.fft.fft2(diff1_apod)
@@ -284,11 +285,11 @@ def get_covariance(ds1,
             all_regions_npsd.append(enmap.ndmap(np.array(npsd), wcs=data_wcs))
 
         # SIGNAL COVARIANCE
-        apod_mask1 = (enmap.apod(coadd1_map*0+1, cf['apod_pix']))
+        apod_mask1 = (enmap.apod(coadd1_map*0+1, apod_pix))
         coadd1_map_apod = coadd1_map * apod_mask1
         coadd1_map_norm = np.fft.fft2(coadd1_map_apod) 
 
-        apod_mask2 = (enmap.apod(coadd2_map*0+1, cf['apod_pix']))
+        apod_mask2 = (enmap.apod(coadd2_map*0+1, apod_pix))
         coadd2_map_apod = coadd2_map * apod_mask2
         coadd2_map_norm = np.fft.fft2(coadd2_map_apod) 
 
