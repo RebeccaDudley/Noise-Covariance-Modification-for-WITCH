@@ -145,6 +145,8 @@ def get_covariance(ds1,
 
     noise_type_bool = noise_covariance_enabled(ds1, ds2, cf["noise_type"])
     max_split_number = min(len(splits1), len(splits2))
+    is_auto = coadd1 == coadd2 and splits1 == splits2 and ivars1 == ivars2
+    split_normalization = 1 if is_auto else max_split_number * (max_split_number - 1)
     all_regions_npsd, all_regions_spsd = [], []
 
     if cf['apply_region_weight']:
@@ -180,6 +182,20 @@ def get_covariance(ds1,
         noise_all_splits_loop = []
        
         if noise_type_bool:
+            if is_auto:
+                split_ivars = np.asarray(ivars1_list)
+                if not np.isfinite(split_ivars).all() or np.any(split_ivars < 0):
+                    raise ValueError(
+                        f"{coadd1}, covariance tile {i + 1}: "
+                        "split inverse variances must be finite and nonnegative."
+                    )
+                degrees_of_freedom = np.count_nonzero(split_ivars, axis=0) - 1
+                if np.any(degrees_of_freedom < 1):
+                    raise ValueError(
+                        f"{coadd1}, covariance tile {i + 1}: "
+                        "auto-noise requires at least two positive-weight splits per pixel."
+                    )
+
             for idx_split in range(max_split_number):
                 
                 split1 = read_region_map(splits1[idx_split], region) * flux_factor1
@@ -195,8 +211,20 @@ def get_covariance(ds1,
                 ivar1_norm = ivar1 / sum_ivar1
                 ivar2_norm = ivar2 / sum_ivar2
 
-                diff1_norm = diff1 * ivar1_norm
-                diff2_norm = diff2 * ivar2_norm
+                if is_auto:
+                    # Put the local split count in the FFT weights so pixels
+                    # with missing splits use their own degrees of freedom.
+                    diff1_norm = enmap.ndmap(
+                        np.where(ivar1 > 0, diff1, 0) * np.sqrt(ivar1_norm / degrees_of_freedom),
+                        diff1.wcs,
+                    )
+                    diff2_norm = enmap.ndmap(
+                        np.where(ivar2 > 0, diff2, 0) * np.sqrt(ivar2_norm / degrees_of_freedom),
+                        diff2.wcs,
+                    )
+                else:
+                    diff1_norm = diff1 * ivar1_norm
+                    diff2_norm = diff2 * ivar2_norm
 
                 apod_mask1 = (enmap.apod(diff1_norm*0+1, cf['apod_pix']))
                 diff1_apod = diff1_norm * apod_mask1
@@ -225,13 +253,16 @@ def get_covariance(ds1,
                     mean_var = np.mean(target[m1]).real
                     target[m2] = mean_var * 1000 + 0.j
 
-                weight = np.mean(ivar1_norm * apod_mask1 * ivar2_norm * apod_mask2)
+                if is_auto:
+                    weight = np.mean(apod_mask1 * apod_mask2)
+                else:
+                    weight = np.mean(ivar1_norm * apod_mask1 * ivar2_norm * apod_mask2)
 
                 npsd_region = diff1_fft * np.conjugate(diff2_fft) / weight
 
                 noise_all_splits_loop.append(npsd_region)
 
-            npsd = (1/(max_split_number*(max_split_number-1))) * np.sum(noise_all_splits_loop, axis=0)
+            npsd = (1 / split_normalization) * np.sum(noise_all_splits_loop, axis=0)
 
             if cf['apply_region_weight']:
                 npsd *= region_weight
