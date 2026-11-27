@@ -3,7 +3,7 @@ from pixell import enmap, wcsutils
 
 
 def covariance_region_geometries(filename, sky_regions):
-    """Define native-grid tiles using the cluster region's pixel dimensions."""
+    """Define odd-sized native-grid tiles using the cluster region's footprint."""
     shape, wcs = enmap.read_map_geometry(filename)
     shape = shape[-2:]
     require_sky_coverage(filename, sky_regions[-1:])
@@ -11,19 +11,20 @@ def covariance_region_geometries(filename, sky_regions):
     # Reverse-axis slices stop one pixel before the lowest included pixel.
     reverse_axes = bounds[2] < 0
     cluster_start = np.minimum(bounds[0], bounds[1]) + reverse_axes
-    tile_shape = np.abs(bounds[1] - bounds[0])
-    if np.any(tile_shape == 0):
+    box_shape = np.abs(bounds[1] - bounds[0])
+    if np.any(box_shape == 0):
         raise ValueError("The cluster covariance region must cover at least one pixel per axis.")
 
+    # Trim one pixel from each even axis so the tile has a central pixel.
+    tile_shape = box_shape - (box_shape % 2 == 0)
+    half_shape = tile_shape // 2
     starts = []
-    for box in sky_regions[:-1]:
+    for box in sky_regions:
         center = enmap.sky2pix(shape, wcs, np.mean(box, axis=0))
         if not np.isfinite(center).all():
-            raise ValueError("A background covariance region has an invalid sky center.")
-        # Use Pixell's sky-box rounding convention for the lower pixel bound.
-        start = np.rint(center - tile_shape / 2 + 1e-4).astype(int)
-        starts.append(start + reverse_axes)
-    starts.append(cluster_start)
+            raise ValueError("A covariance region has an invalid sky center.")
+        starts.append(np.rint(center).astype(int) - half_shape)
+    starts[-1] = np.clip(starts[-1], cluster_start, cluster_start + box_shape - tile_shape)
 
     return [
         enmap.slice_geometry(
